@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: volticfit
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/volticfit
+    username: root
+    password: 
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+
+server:
+  port: 9090
+
+security:
+  jwt:
+    secret-key: 7CBSJFF50p9t025oPtstXxCFJZTuQHagDAYWanTOagk= # Genera con openssl rand -base64 32
+    token-expiration: 600000 # 10 min expresado en ms
