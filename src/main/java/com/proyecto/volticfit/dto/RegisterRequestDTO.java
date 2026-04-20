@@ -20,12 +20,14 @@ public class RegisterRequestDTO {
     private String correo;
 
     @NotBlank(message = "El campo es obligatorio")
+    @Size(min = 10, message = "El telefono debe tener al menos 10 números")
+    private String telefono;
+
+    @NotBlank(message = "El campo es obligatorio")
     @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
     private String contrasena;
 
-    @NotBlank(message = "El campo es obligatorio")
-    private String rol;        // ← ¿está este?
+    private String rol = "aprendiz";
 
-    @NotNull(message = "El campo es obligatorio")
-    private Boolean estado;    // ← ¿y este?
+    private Boolean estado = true;
 }
