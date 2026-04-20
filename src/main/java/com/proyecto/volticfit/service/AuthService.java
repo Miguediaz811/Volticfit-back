@@ -32,6 +32,7 @@ public class AuthService {
         user.setNombres(request.getNombres());
         user.setApellidos(request.getApellidos());
         user.setCorreo(request.getCorreo());
+        user.setTelefono(request.getTelefono());
         user.setContrasena(passwordEncoder.encode(request.getContrasena()));
         user.setRol(request.getRol());
         user.setEstado(request.getEstado());

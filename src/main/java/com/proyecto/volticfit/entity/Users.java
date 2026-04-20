@@ -26,6 +26,9 @@ public class Users {
     @Column(name = "correo")
     private String correo;
 
+    @Column(name = "telefono")
+    private String telefono;
+
     @Column(name = "contrasena")
     private String contrasena;
 
