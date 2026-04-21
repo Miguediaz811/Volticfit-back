@@ -1,35 +1,35 @@
 package com.proyecto.volticfit.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
 @Data
 @Table(name = "Usuario")
 public class Users {
-   @Id
-   @GeneratedValue(strategy = GenerationType.IDENTITY)
-   @Column(name = "id_usuario")
-   private Long id_usuario;
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_usuario")
+    private Long id_usuario;
 
-   @Column(name = "nombres")
-   private String nombres;
+    @Column(name = "nombres")
+    private String nombres;
 
     @Column(name = "apellidos")
     private String apellidos;
 
-    @Column(name = "correo")
+    @Column(name = "correo", unique = true)
     private String correo;
 
     @Column(name = "telefono")
-    private String telefono;
+    private Long telefono;
 
-    @Column(name = "contrasena")
+    @Column(name = "tipo_doc")
+    private String tipoDoc;
+
+    // Mapeo exacto para la 'ñ' de tu script SQL
+    @Column(name = "contraseña") 
     private String contrasena;
 
     @Column(name = "rol")

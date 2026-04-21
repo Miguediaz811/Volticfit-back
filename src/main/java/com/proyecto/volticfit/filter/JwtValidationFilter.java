@@ -22,8 +22,8 @@ public class JwtValidationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws IOException {
+            HttpServletResponse response,
+            FilterChain filterChain) throws IOException {
 
         String authHeader = request.getHeader("Authorization");
 
@@ -66,7 +66,9 @@ public class JwtValidationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI();
-        return path.equals("/auth/login") || path.equals("/auth/register");
+        String path = request.getServletPath();
+        // Con esto permitimos login, register, forgot-password y cualquier cosa en
+        // /auth/
+        return path.startsWith("/auth/");
     }
 }
