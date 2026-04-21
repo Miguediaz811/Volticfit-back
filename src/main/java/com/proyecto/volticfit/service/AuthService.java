@@ -4,10 +4,16 @@ import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.proyecto.volticfit.dto.*;
+import com.proyecto.volticfit.dto.ChangePasswordRequestDTO;
+import com.proyecto.volticfit.dto.LoginRequestDTO;
+import com.proyecto.volticfit.dto.LoginResponseDTO;
+import com.proyecto.volticfit.dto.MessageResponseDTO;
+import com.proyecto.volticfit.dto.RefreshTokenResponseDTO;
+import com.proyecto.volticfit.dto.RegisterRequestDTO;
 import com.proyecto.volticfit.entity.Users;
 import com.proyecto.volticfit.repository.UsersRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -65,20 +71,28 @@ public class AuthService {
         return response;
     }
 
-    public void enviarSolicitudRecuperacion(ForgotPasswordRequestDTO request) {
-        var usuario = usersRepository.findByCorreo(request.getCorreo())
-                .orElseThrow(() -> new RuntimeException("No se encontró un usuario con ese correo"));
-    
-        String token = jwtService.generateResetToken(usuario.getCorreo());
-        emailService.enviarCorreoRecuperacion(usuario.getCorreo(), token);
+    @Transactional
+    public MessageResponseDTO changePassword(Long userId, ChangePasswordRequestDTO request) {
+
+    if (userId == null) {
+        throw new RuntimeException("Usuario no autenticado");
     }
-    public MessageResponseDTO verifyRecoveryCode(VerifyCodeRequestDTO request) {
-        if (!passwordResetCodeService.isValidCode(request.getCorreo(), request.getCodigo())) {
-            throw new RuntimeException("Código inválido o expirado");
-        }
-    
-        MessageResponseDTO response = new MessageResponseDTO();
-        response.setMessage("Código verificado correctamente");
-        return response;
+
+    Users user = usersRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+    // validar contraseña actual
+    if (!user.getContrasena().equals(request.getCurrentPassword())) {
+        throw new RuntimeException("La contraseña actual es incorrecta");
     }
+
+    // actualizar contraseña
+    user.setContrasena(passwordEncoder.encode(request.getNewPassword()));
+    usersRepository.save(user);
+
+    MessageResponseDTO response = new MessageResponseDTO();
+    response.setMessage("Contraseña actualizada correctamente");
+
+    return response;
+}
 }
