@@ -19,6 +19,14 @@ public class RegisterRequestDTO {
 
     @NotBlank(message = "El campo es obligatorio")
     @NotNull(message = "El campo no puede ser nulo")
+    private String tipo_doc;
+
+    @NotBlank(message = "El campo es obligatorio")
+    @NotNull(message = "El campo no puede ser nulo")
+    private String num_doc;
+
+    @NotBlank(message = "El campo es obligatorio")
+    @NotNull(message = "El campo no puede ser nulo")
     @Email(message = "El correo no es válido")
     private String correo;
 
