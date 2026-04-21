@@ -4,11 +4,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.proyecto.volticfit.dto.*;
+import com.proyecto.volticfit.dto.ChangePasswordRequestDTO;
+import com.proyecto.volticfit.dto.LoginRequestDTO;
+import com.proyecto.volticfit.dto.LoginResponseDTO;
+import com.proyecto.volticfit.dto.MessageResponseDTO;
+import com.proyecto.volticfit.dto.RefreshTokenResponseDTO;
+import com.proyecto.volticfit.dto.RegisterRequestDTO;
 import com.proyecto.volticfit.service.AuthService;
 import com.proyecto.volticfit.service.TokenBlackListService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import java.util.Map;
 import java.util.HashMap;
@@ -74,27 +80,13 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/recovery/verify")
-    public ResponseEntity<?> verifyCode(@RequestBody VerifyCodeRequestDTO request) {
-        try {
-            MessageResponseDTO response = authService.verifyRecoveryCode(request);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
-    }
+    @PostMapping("/change-password")
+    public ResponseEntity<MessageResponseDTO> changePassword(
+        @Valid @RequestBody ChangePasswordRequestDTO request,
+        HttpServletRequest httpRequest) {
 
-    @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequestDTO request) {
-        try {
-            // Delegamos toda la lógica al service que ya arreglamos antes
-            authService.enviarSolicitudRecuperacion(request);
-            return ResponseEntity.ok(Map.of("message", "Si el correo está registrado, recibirás un enlace de recuperación."));
-        } catch (Exception e) {
-            // Es mejor no revelar si el correo existe o no por seguridad, 
-            // pero para debug puedes dejar el error:
-            return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Proceso de recuperación iniciado"));
-        }
-    }
+    Long userId = (Long) httpRequest.getAttribute("userId");
+
+    return ResponseEntity.ok(authService.changePassword(userId, request));
+}
 }
