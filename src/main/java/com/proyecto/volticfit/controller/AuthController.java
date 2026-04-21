@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.proyecto.volticfit.dto.ChangePasswordRequestDTO;
 import com.proyecto.volticfit.dto.LoginRequestDTO;
 import com.proyecto.volticfit.dto.LoginResponseDTO;
 import com.proyecto.volticfit.dto.MessageResponseDTO;
@@ -17,6 +18,7 @@ import com.proyecto.volticfit.service.AuthService;
 import com.proyecto.volticfit.service.TokenBlackListService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -78,4 +80,14 @@ public class AuthController {
                     .body(new java.util.HashMap<>(java.util.Map.of("error", e.getMessage())));
         }
     }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<MessageResponseDTO> changePassword(
+        @Valid @RequestBody ChangePasswordRequestDTO request,
+        HttpServletRequest httpRequest) {
+
+    Long userId = (Long) httpRequest.getAttribute("userId");
+
+    return ResponseEntity.ok(authService.changePassword(userId, request));
+}
 }
