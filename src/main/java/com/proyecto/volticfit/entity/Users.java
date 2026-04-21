@@ -23,6 +23,12 @@ public class Users {
     @Column(name = "apellidos")
     private String apellidos;
 
+    @Column(name = "tipo_doc")
+    private String tipo_doc;
+
+    @Column(name = "num_doc")
+    private String num_doc;
+
     @Column(name = "correo")
     private String correo;
 
