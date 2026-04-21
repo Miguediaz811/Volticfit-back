@@ -35,7 +35,7 @@ public class Users {
     @Column(name = "telefono")
     private String telefono;
 
-    @Column(name = "contrasena")
+    @Column(name = "contraseña")
     private String contrasena;
 
     @Column(name = "rol")
