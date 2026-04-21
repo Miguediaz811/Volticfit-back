@@ -2,11 +2,7 @@ package com.proyecto.volticfit.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.proyecto.volticfit.dto.ChangePasswordRequestDTO;
 import com.proyecto.volticfit.dto.LoginRequestDTO;
@@ -20,10 +16,13 @@ import com.proyecto.volticfit.service.TokenBlackListService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:4200") // <--- AÑADE ESTA LÍNEA justo debajo de @RequestMapping
 public class AuthController {
 
     private final AuthService authService;
@@ -36,7 +35,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new java.util.HashMap<>(java.util.Map.of("error", e.getMessage())));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -47,7 +46,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new java.util.HashMap<>(java.util.Map.of("error", e.getMessage())));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -57,10 +56,10 @@ public class AuthController {
         if (token != null && token.startsWith("Bearer ")) {
             token = token.substring(7);
             blacklistService.add(token);
-            return ResponseEntity.ok(new java.util.HashMap<>(java.util.Map.of("message", "Sesión cerrada")));
+            return ResponseEntity.ok(Map.of("message", "Sesión cerrada"));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new java.util.HashMap<>(java.util.Map.of("error", "Token no proporcionado")));
+                .body(Map.of("error", "Token no proporcionado"));
     }
 
     @GetMapping("/refresh")
@@ -68,7 +67,7 @@ public class AuthController {
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new java.util.HashMap<>(java.util.Map.of("error", "Header Authorization faltante")));
+                    .body(Map.of("error", "Header Authorization faltante"));
         }
 
         String token = authHeader.substring(7);
@@ -77,7 +76,7 @@ public class AuthController {
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new java.util.HashMap<>(java.util.Map.of("error", e.getMessage())));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
