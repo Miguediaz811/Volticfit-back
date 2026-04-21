@@ -19,17 +19,19 @@ public class Users {
     @Column(name = "apellidos")
     private String apellidos;
 
-    @Column(name = "correo", unique = true)
+    @Column(name = "tipo_doc")
+    private String tipo_doc;
+
+    @Column(name = "num_doc")
+    private String num_doc;
+
+    @Column(name = "correo")
     private String correo;
 
     @Column(name = "telefono")
     private Long telefono;
 
-    @Column(name = "tipo_doc")
-    private String tipoDoc;
-
-    // Mapeo exacto para la 'ñ' de tu script SQL
-    @Column(name = "contraseña") 
+    @Column(name = "contraseña")
     private String contrasena;
 
     @Column(name = "rol")

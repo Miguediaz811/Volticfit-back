@@ -28,6 +28,8 @@ public class AuthService {
         Users user = new Users();
         user.setNombres(request.getNombres());
         user.setApellidos(request.getApellidos());
+        user.setTipo_doc(request.getTipo_doc());
+        user.setNum_doc(request.getNum_doc());
         user.setCorreo(request.getCorreo());
         user.setTelefono(request.getTelefono());
         user.setContrasena(passwordEncoder.encode(request.getContrasena()));
