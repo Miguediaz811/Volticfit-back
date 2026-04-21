@@ -3,12 +3,9 @@ package com.proyecto.volticfit.service;
 import java.util.Date;
 import java.util.Map;
 import java.util.function.Function;
-
 import javax.crypto.SecretKey;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -16,10 +13,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
-/**
- * Servicio encargado de la gestión de JSON Web Tokens (JWT).
- * Proporciona métodos para crear, validar, leer y refrescar tokens de acceso.
- */
 @Service
 public class JwtService {
 
@@ -29,9 +22,11 @@ public class JwtService {
     @Value("${security.jwt.token-expiration}")
     private Long tokenExpiration;
 
-    /**
-     * Genera un nuevo token JWT para un usuario con su correo y rol.
-     */
+    private SecretKey getSigningKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
     public String generateToken(String correo, String rol) {
         return Jwts.builder()
                 .claims(Map.of("rol", rol))
@@ -42,17 +37,16 @@ public class JwtService {
                 .compact();
     }
 
-    /**
-     * Transforma la clave secreta (Base64) a un objeto SecretKey utilizable por la librería.
-     */
-    private SecretKey getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
+    // MÉTODO PARA RECUPERACIÓN (15 MINUTOS)
+    public String generateResetToken(String email) {
+        return Jwts.builder()
+                .subject(email)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 900000)) // 15 min
+                .signWith(getSigningKey())
+                .compact();
     }
 
-    /**
-     * Verifica si un token es íntegro y no ha expirado.
-     */
     public Boolean isTokenValid(String token) {
         try {
             Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token);
@@ -60,6 +54,10 @@ public class JwtService {
         } catch (JwtException e) {
             return false;
         }
+    }
+
+    public String extractCorreo(String token) {
+        return extractClaims(token, Claims::getSubject);
     }
 
     public <T> T extractClaims(String token, Function<Claims, T> resolver) {
@@ -71,19 +69,10 @@ public class JwtService {
         return resolver.apply(claims);
     }
 
-    public String extractCorreo(String token) {
-        return extractClaims(token, Claims::getSubject);
-    }
-
     public String extractRol(String token) {
         return extractClaims(token, c -> c.get("rol", String.class));
     }
 
-    /**
-     * Refresca el token, incluso si está expirado (permite renovar sesión sin re-login).
-     * @param token JWT viejo (válido o expirado)
-     * @return Nuevo JWT firmado
-     */
     public String refreshToken(String token) {
         Claims claims;
         try {
@@ -93,12 +82,10 @@ public class JwtService {
                     .parseSignedClaims(token)
                     .getPayload();
         } catch (ExpiredJwtException e) {
-            // Si expiró, recuperamos los datos del cuerpo del error
             claims = e.getClaims();
-        } catch (JwtException e) {
-            throw new RuntimeException("Token inválido: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("Error al refrescar token: " + e.getMessage());
         }
-
         return generateToken(claims.getSubject(), claims.get("rol", String.class));
     }
 }
