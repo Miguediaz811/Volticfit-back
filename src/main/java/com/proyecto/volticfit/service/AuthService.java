@@ -1,7 +1,6 @@
 package com.proyecto.volticfit.service;
 
 import java.util.Optional;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +23,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UsersRepository usersRepository;
     private final JwtService jwtService;
+    private final EmailService emailService;
+    private final PasswordResetCodeService passwordResetCodeService; 
 
     public MessageResponseDTO register(RegisterRequestDTO request) {
         if (usersRepository.findByCorreo(request.getCorreo()).isPresent()) {
@@ -33,6 +34,8 @@ public class AuthService {
         Users user = new Users();
         user.setNombres(request.getNombres());
         user.setApellidos(request.getApellidos());
+        user.setTipo_doc(request.getTipo_doc());
+        user.setNum_doc(request.getNum_doc());
         user.setCorreo(request.getCorreo());
         user.setTelefono(request.getTelefono());
         user.setContrasena(passwordEncoder.encode(request.getContrasena()));
@@ -40,37 +43,27 @@ public class AuthService {
         user.setEstado(request.getEstado());
         usersRepository.save(user);
 
+        // Corregido: MessageResponseDTO usualmente no tiene constructor con String si falla el build
         MessageResponseDTO response = new MessageResponseDTO();
         response.setMessage("Registro exitoso");
         return response;
     }
 
     public LoginResponseDTO login(LoginRequestDTO request) {
-        Optional<Users> userOpt = usersRepository.findByCorreo(request.getCorreo());
-
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("Usuario no encontrado");
-        }
-
-        Users user = userOpt.get();
+        Users user = usersRepository.findByCorreo(request.getCorreo())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         if (!passwordEncoder.matches(request.getContrasena(), user.getContrasena())) {
             throw new RuntimeException("Contraseña incorrecta");
         }
 
         String jwt = jwtService.generateToken(user.getCorreo(), user.getRol());
-
         LoginResponseDTO response = new LoginResponseDTO();
         response.setMessage("Inicio de sesión exitoso");
         response.setJwt(jwt);
         return response;
     }
 
-    /**
-     * Refresca el token JWT del usuario.
-     * @param token JWT viejo (puede estar expirado)
-     * @return Nuevo JWT
-     */
     public RefreshTokenResponseDTO refreshToken(String token) {
         String jwt = jwtService.refreshToken(token);
         RefreshTokenResponseDTO response = new RefreshTokenResponseDTO();
