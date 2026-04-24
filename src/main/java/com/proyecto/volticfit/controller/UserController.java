@@ -12,11 +12,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyecto.volticfit.dto.MessageResponseDTO;
-import com.proyecto.volticfit.dto.UpdateUserDTO;
+import com.proyecto.volticfit.dto.Users.UpdateUserDTO;
 import com.proyecto.volticfit.enums.RoleEnum;
 import com.proyecto.volticfit.security.RequiresRole;
 import com.proyecto.volticfit.service.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,15 +30,31 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:4200")
 public class UserController {
+
+    /**
+     * servicio de usuarios
+     */
+    private final UserService userService;
+
+    @Operation(summary = "Update user data - ADMIN or same user",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "User updated successfully",
+                content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "400", description = "Error updating user")
+        }
+    )
  
-        private final UserService userService;
- 
-    // ADMIN o el mismo usuario pueden actualizar
+    /**
+     * Actualizar datos de usuario
+     * 
+     * @param id ID del usuario a actualizar
+     * @param request datos a actualizar
+     * @param httpRequest datos de la solicitud para obtener el rol y userId del usuario que realiza la solicitud
+     * @return MessageResponseDTO con el mensaje de éxito o error de la actualización del usuario
+     */
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(
-            @PathVariable Long id,
-            @Valid @RequestBody UpdateUserDTO request,
-            HttpServletRequest httpRequest) {
+    public ResponseEntity<MessageResponseDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UpdateUserDTO request,HttpServletRequest httpRequest) {
         try {
             String role = (String) httpRequest.getAttribute("role");
             Long requesterId = (Long) httpRequest.getAttribute("userId");
@@ -42,25 +62,41 @@ public class UserController {
             MessageResponseDTO response = userService.updateUser(id, request, role, requesterId);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", e.getMessage()));
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
- 
-    // Solo ADMIN puede inactivar cuentas
+
+    @Operation(summary = "Deactivate user account - ADMIN only",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Account deactivated successfully",
+                content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "User not found"),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+        }
+    )
+
+    /**
+     * Inactivar cuenta de usuario
+     * 
+     * @param id ID del usuario a inactivar
+     * @return MessageResponseDTO con el mensaje de éxito o error de la inactivación de la cuenta
+     */
     @PutMapping("/{id}/inactivar")
     @RequiresRole(RoleEnum.ADMIN)
-    public ResponseEntity<?> deactivateAccount(@PathVariable Long id) {
+    public ResponseEntity<MessageResponseDTO> deactivateAccount(@PathVariable Long id) {
         try {
             MessageResponseDTO response = userService.deactivateAccount(id);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
-
 }

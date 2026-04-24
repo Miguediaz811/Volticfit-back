@@ -2,7 +2,8 @@ package com.proyecto.volticfit.enums;
 
 public enum RoleEnum {
     ADMIN("admin"),
-    APRENDIZ("aprendiz");
+    APRENDIZ("aprendiz"),
+    FUNCIONARIO("funcionario");
  
     private final String value;
  
