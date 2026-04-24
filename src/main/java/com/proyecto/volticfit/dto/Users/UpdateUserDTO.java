@@ -1,4 +1,4 @@
-package com.proyecto.volticfit.dto;
+package com.proyecto.volticfit.dto.Users;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;

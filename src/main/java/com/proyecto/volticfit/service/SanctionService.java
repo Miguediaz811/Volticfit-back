@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class SanctionService {
+    
     private final SanctionRepository sanctionRepository;
 
     public List<Sanction> getAll() {

@@ -14,10 +14,15 @@ import java.util.Date;
 import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * Service responsible for JWT token management.
+ * Handles creation, validation, and extraction of token claims.
+ */
 @Service
 public class JwtService {
 
     private final String secretKey;
+    
     private final Long tokenExpiration;
 
     // El constructor recibe las propiedades del application.yml
