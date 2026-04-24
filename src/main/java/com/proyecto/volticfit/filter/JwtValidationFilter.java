@@ -5,10 +5,13 @@ import java.io.IOException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.proyecto.volticfit.entity.Users;
+import com.proyecto.volticfit.repository.UsersRepository;
 import com.proyecto.volticfit.service.JwtService;
 import com.proyecto.volticfit.service.TokenBlackListService;
 
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +22,12 @@ public class JwtValidationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final TokenBlackListService blacklistService;
+    private final UsersRepository usersRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain filterChain) throws IOException {
+            FilterChain filterChain) throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
 
@@ -45,11 +49,15 @@ public class JwtValidationFilter extends OncePerRequestFilter {
 
         try {
             if (jwtService.isTokenValid(token)) {
-                String correo = jwtService.extractCorreo(token);
-                String rol = jwtService.extractRol(token);
+                String email = jwtService.extractEmail(token);
+                String role = jwtService.extractRole(token);
+                
+                Users user = usersRepository.findByEmail(email)
+                        .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado para el token"));
 
-                request.setAttribute("correo", correo);
-                request.setAttribute("rol", rol);
+                request.setAttribute("userId", user.getIdUser());
+                request.setAttribute("email", email);
+                request.setAttribute("role", role);
 
                 filterChain.doFilter(request, response);
             } else {
@@ -67,8 +75,10 @@ public class JwtValidationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        // Con esto permitimos login, register, forgot-password y cualquier cosa en
-        // /auth/
-        return path.startsWith("/auth/");
+        // Solo añadimos la ruta de restore para que no te pida token
+        return path.equals("/auth/login")
+                || path.equals("/auth/register")
+                || path.equals("/auth/refresh")
+                || path.equals("/auth/restore-password");
     }
 }
