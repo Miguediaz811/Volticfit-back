@@ -5,15 +5,15 @@ import java.util.List;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.proyecto.volticfit.dto.ChangePasswordRequestDTO;
-import com.proyecto.volticfit.dto.ForgotPasswordRequestDTO;
-import com.proyecto.volticfit.dto.LoginRequestDTO;
-import com.proyecto.volticfit.dto.LoginResponseDTO;
 import com.proyecto.volticfit.dto.MessageResponseDTO;
-import com.proyecto.volticfit.dto.RefreshTokenResponseDTO;
-import com.proyecto.volticfit.dto.RegisterRequestDTO;
-import com.proyecto.volticfit.dto.RestorePasswordRequestDTO; // <--- Importante añadirlo
-import com.proyecto.volticfit.dto.VerifyCodeRequestDTO;
+import com.proyecto.volticfit.dto.Auth.ChangePasswordRequestDTO;
+import com.proyecto.volticfit.dto.Auth.ForgotPasswordRequestDTO;
+import com.proyecto.volticfit.dto.Auth.LoginRequestDTO;
+import com.proyecto.volticfit.dto.Auth.LoginResponseDTO;
+import com.proyecto.volticfit.dto.Auth.RefreshTokenResponseDTO;
+import com.proyecto.volticfit.dto.Auth.RegisterRequestDTO;
+import com.proyecto.volticfit.dto.Auth.RestorePasswordRequestDTO;
+import com.proyecto.volticfit.dto.Auth.VerifyCodeRequestDTO;
 import com.proyecto.volticfit.entity.Users;
 import com.proyecto.volticfit.repository.UsersRepository;
 
@@ -24,9 +24,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthService {
 
+    // Inyectamos el PasswordEncoder para manejar el hashing de contraseñas
     private final PasswordEncoder passwordEncoder;
+
+    // Inyectamos el UsersRepository para acceder a los datos de usuarios
     private final UsersRepository usersRepository;
+
+    // Inyectamos el JwtService para manejar la generación y validación de tokens JWT
     private final JwtService jwtService;
+
+    private final EmailService emailService;
+    private final PasswordResetCodeService passwordResetCodeService;
 
     public MessageResponseDTO register(RegisterRequestDTO request) {
         if (usersRepository.findByEmail(request.getEmail()).isPresent()) {
