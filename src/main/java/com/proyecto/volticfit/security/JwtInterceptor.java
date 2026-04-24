@@ -1,4 +1,4 @@
-package com.proyecto.volticfit.config;
+package com.proyecto.volticfit.security;
 
 import com.proyecto.volticfit.service.JwtService;
 import com.proyecto.volticfit.service.TokenBlackListService;

@@ -13,8 +13,8 @@ public class VerifyCodeRequestDTO {
 
     @NotBlank(message = "El campo es obligatorio")
     @Email(message = "El correo no es válido")
-    private String correo;
+    private String email;
 
     @NotBlank(message = "El campo es obligatorio")
-    private String codigo;
+    private String token;
 }
