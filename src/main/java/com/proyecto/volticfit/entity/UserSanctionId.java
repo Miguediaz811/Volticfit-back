@@ -9,5 +9,6 @@ import lombok.Data;
 @Data
 public class UserSanctionId implements Serializable{
     private Long userId;
+    
     private Long sanctionId;
 }
