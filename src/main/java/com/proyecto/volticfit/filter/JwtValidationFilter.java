@@ -49,15 +49,15 @@ public class JwtValidationFilter extends OncePerRequestFilter {
 
         try {
             if (jwtService.isTokenValid(token)) {
-                String correo = jwtService.extractCorreo(token);
-                String rol = jwtService.extractRol(token);
+                String email = jwtService.extractEmail(token);
+                String role = jwtService.extractRole(token);
                 
-                Users user = usersRepository.findByCorreo(correo)
+                Users user = usersRepository.findByEmail(email)
                         .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado para el token"));
 
-                request.setAttribute("userId", user.getId_usuario());
-                request.setAttribute("correo", correo);
-                request.setAttribute("rol", rol);
+                request.setAttribute("userId", user.getIdUser());
+                request.setAttribute("email", email);
+                request.setAttribute("role", role);
 
                 filterChain.doFilter(request, response);
             } else {
