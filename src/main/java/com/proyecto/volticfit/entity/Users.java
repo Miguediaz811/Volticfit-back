@@ -11,32 +11,32 @@ public class Users {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_usuario")
-    private Long id_usuario;
+    private Long idUser;
 
     @Column(name = "nombres")
-    private String nombres;
+    private String names;
 
     @Column(name = "apellidos")
-    private String apellidos;
+    private String surnames;
 
     @Column(name = "tipo_doc")
-    private String tipo_doc;
+    private String docType;
 
     @Column(name = "num_doc")
-    private String num_doc;
+    private String docNum;
 
     @Column(name = "correo")
-    private String correo;
+    private String email;
 
     @Column(name = "telefono")
-    private Long telefono;
+    private Long phone;
 
     @Column(name = "contraseña")
-    private String contrasena;
+    private String password;
 
     @Column(name = "rol")
-    private String rol = "aprendiz";
+    private String role = "aprendiz";
 
     @Column(name = "estado")
-    private Boolean estado = true;
+    private Boolean state = true;
 }

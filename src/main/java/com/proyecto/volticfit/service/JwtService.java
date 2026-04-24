@@ -1,6 +1,7 @@
 package com.proyecto.volticfit.service;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -32,10 +33,10 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(String correo, String rol) {
+    public String generateToken(String email, String role) {
         return Jwts.builder()
-                .claims(Map.of("rol", rol))
-                .subject(correo)
+                .claims(Map.of("role", role))
+                .subject(email)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + tokenExpiration))
                 .signWith(getSigningKey())
@@ -49,24 +50,43 @@ public class JwtService {
         return Jwts.builder()
                 .subject(email)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 900000)) 
+                .expiration(new Date(System.currentTimeMillis() + 900000))
                 .signWith(getSigningKey())
                 .compact();
+    }
+
+    public String refreshToken(String token) {
+        Claims claims;
+        try {
+            claims = Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (ExpiredJwtException e) {
+            // Allow refresh even if token is expired
+            claims = e.getClaims();
+        } catch (JwtException e) {
+            throw new RuntimeException("Token is invalid: " + e.getMessage());
+        }
+
+        return generateToken(claims.getSubject(), claims.get("role", String.class));
+
     }
 
     public boolean isTokenValid(String token) {
         try {
             Jwts.parser()
-                .verifyWith(getSigningKey())
-                .build()
-                .parseSignedClaims(token);
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token);
             return true;
         } catch (JwtException e) {
             return false;
         }
     }
 
-    public String extractCorreo(String token) {
+    public String extractEmail(String token) {
         return extractClaims(token, Claims::getSubject);
     }
 
@@ -82,7 +102,7 @@ public class JwtService {
     /**
      * Extrae el rol para poder refrescar el token o validar permisos
      */
-    public String extractRol(String token) {
-        return extractClaims(token, claims -> claims.get("rol", String.class));
+    public String extractRole(String token) {
+        return extractClaims(token, claims -> claims.get("rolE", String.class));
     }
 }
