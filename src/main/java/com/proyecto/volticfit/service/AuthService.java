@@ -10,11 +10,13 @@ import com.proyecto.volticfit.dto.LoginResponseDTO;
 import com.proyecto.volticfit.dto.MessageResponseDTO;
 import com.proyecto.volticfit.dto.RefreshTokenResponseDTO;
 import com.proyecto.volticfit.dto.RegisterRequestDTO;
+import com.proyecto.volticfit.dto.RestorePasswordRequestDTO; // <--- Importante añadirlo
 import com.proyecto.volticfit.entity.Users;
 import com.proyecto.volticfit.repository.UsersRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +32,6 @@ public class AuthService {
         if (usersRepository.findByCorreo(request.getCorreo()).isPresent()) {
             throw new RuntimeException("Este correo ya está en uso");
         }
-
         Users user = new Users();
         user.setNombres(request.getNombres());
         user.setApellidos(request.getApellidos());
@@ -42,8 +43,6 @@ public class AuthService {
         user.setRol(request.getRol());
         user.setEstado(request.getEstado());
         usersRepository.save(user);
-
-        // Corregido: MessageResponseDTO usualmente no tiene constructor con String si falla el build
         MessageResponseDTO response = new MessageResponseDTO();
         response.setMessage("Registro exitoso");
         return response;
@@ -52,47 +51,50 @@ public class AuthService {
     public LoginResponseDTO login(LoginRequestDTO request) {
         Users user = usersRepository.findByCorreo(request.getCorreo())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
         if (!passwordEncoder.matches(request.getContrasena(), user.getContrasena())) {
             throw new RuntimeException("Contraseña incorrecta");
         }
-
         String jwt = jwtService.generateToken(user.getCorreo(), user.getRol());
         LoginResponseDTO response = new LoginResponseDTO();
         response.setMessage("Inicio de sesión exitoso");
         response.setJwt(jwt);
         return response;
     }
-
+/* 
     public RefreshTokenResponseDTO refreshToken(String token) {
         String jwt = jwtService.refreshToken(token);
         RefreshTokenResponseDTO response = new RefreshTokenResponseDTO();
         response.setJwt(jwt);
         return response;
     }
-
+*/
     @Transactional
     public MessageResponseDTO changePassword(Long userId, ChangePasswordRequestDTO request) {
-
-    if (userId == null) {
-        throw new RuntimeException("Usuario no autenticado");
+        Users user = usersRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getContrasena())) {
+            throw new RuntimeException("La contraseña actual es incorrecta");
+        }
+        user.setContrasena(passwordEncoder.encode(request.getNewPassword()));
+        usersRepository.save(user);
+        MessageResponseDTO response = new MessageResponseDTO();
+        response.setMessage("Contraseña actualizada correctamente");
+        return response;
     }
 
-    Users user = usersRepository.findById(userId)
-        .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    /**
+     * REEMPLAZO: Este método ahora sigue el estilo de Manada para el reset
+     */
+    @Transactional
+    public MessageResponseDTO restorePassword(RestorePasswordRequestDTO request) {
+        Users user = usersRepository.findByCorreo(request.getCorreo())
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            
+        user.setContrasena(passwordEncoder.encode(request.getNuevaContrasena()));
+        usersRepository.save(user);
 
-    // validar contraseña actual
-    if (!user.getContrasena().equals(request.getCurrentPassword())) {
-        throw new RuntimeException("La contraseña actual es incorrecta");
+        MessageResponseDTO response = new MessageResponseDTO();
+        response.setMessage("Contraseña actualizada con éxito");
+        return response;
     }
-
-    // actualizar contraseña
-    user.setContrasena(passwordEncoder.encode(request.getNewPassword()));
-    usersRepository.save(user);
-
-    MessageResponseDTO response = new MessageResponseDTO();
-    response.setMessage("Contraseña actualizada correctamente");
-
-    return response;
-}
 }

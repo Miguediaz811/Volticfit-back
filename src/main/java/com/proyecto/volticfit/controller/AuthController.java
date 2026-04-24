@@ -10,6 +10,7 @@ import com.proyecto.volticfit.dto.LoginResponseDTO;
 import com.proyecto.volticfit.dto.MessageResponseDTO;
 import com.proyecto.volticfit.dto.RefreshTokenResponseDTO;
 import com.proyecto.volticfit.dto.RegisterRequestDTO;
+import com.proyecto.volticfit.dto.RestorePasswordRequestDTO;
 import com.proyecto.volticfit.service.AuthService;
 import com.proyecto.volticfit.service.TokenBlackListService;
 
@@ -17,12 +18,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import java.util.Map;
-import java.util.HashMap;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200") // <--- AÑADE ESTA LÍNEA justo debajo de @RequestMapping
+@CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
 
     private final AuthService authService;
@@ -61,7 +61,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("error", "Token no proporcionado"));
     }
-
+/* 
     @GetMapping("/refresh")
     public ResponseEntity<?> refreshToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
@@ -79,14 +79,28 @@ public class AuthController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
-
+*/
     @PostMapping("/change-password")
     public ResponseEntity<MessageResponseDTO> changePassword(
-        @Valid @RequestBody ChangePasswordRequestDTO request,
-        HttpServletRequest httpRequest) {
+            @Valid @RequestBody ChangePasswordRequestDTO request,
+            HttpServletRequest httpRequest) {
 
-    Long userId = (Long) httpRequest.getAttribute("userId");
+        Long userId = (Long) httpRequest.getAttribute("userId");
+        return ResponseEntity.ok(authService.changePassword(userId, request));
+    }
 
-    return ResponseEntity.ok(authService.changePassword(userId, request));
-}
+    /**
+     * Endpoint para restaurar la contraseña (estilo Manada)
+     * No requiere token de seguridad.
+     */
+    @PostMapping("/restore-password")
+    public ResponseEntity<?> restorePassword(@Valid @RequestBody RestorePasswordRequestDTO request) {
+        try {
+            MessageResponseDTO response = authService.restorePassword(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
 }
