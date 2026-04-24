@@ -9,5 +9,5 @@ import com.proyecto.volticfit.entity.Users;
  
 @Repository
 public interface UsersRepository extends JpaRepository<Users, Long> {
-    Optional<Users> findByCorreo(String correo);
+    Optional<Users> findByemail(String correo);
 }

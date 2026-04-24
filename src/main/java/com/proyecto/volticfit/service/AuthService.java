@@ -22,11 +22,13 @@ import lombok.RequiredArgsConstructor;
 public class AuthService {
 
     private final PasswordEncoder passwordEncoder;
+
     private final UsersRepository usersRepository;
+    
     private final JwtService jwtService;
 
     public MessageResponseDTO register(RegisterRequestDTO request) {
-        if (usersRepository.findByCorreo(request.getCorreo()).isPresent()) {
+        if (usersRepository.findByemail(request.getCorreo()).isPresent()) {
             throw new RuntimeException("Este correo ya está en uso");
         }
 
@@ -46,7 +48,7 @@ public class AuthService {
     }
 
     public LoginResponseDTO login(LoginRequestDTO request) {
-        Optional<Users> userOpt = usersRepository.findByCorreo(request.getCorreo());
+        Optional<Users> userOpt = usersRepository.findByemail(request.getCorreo());
 
         if (userOpt.isEmpty()) {
             throw new RuntimeException("Usuario no encontrado");

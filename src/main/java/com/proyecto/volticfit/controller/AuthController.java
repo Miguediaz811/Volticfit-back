@@ -14,6 +14,8 @@ import com.proyecto.volticfit.dto.LoginResponseDTO;
 import com.proyecto.volticfit.dto.MessageResponseDTO;
 import com.proyecto.volticfit.dto.RefreshTokenResponseDTO;
 import com.proyecto.volticfit.dto.RegisterRequestDTO;
+import com.proyecto.volticfit.enums.RoleEnum;
+import com.proyecto.volticfit.security.RequiresRole;
 import com.proyecto.volticfit.service.AuthService;
 import com.proyecto.volticfit.service.TokenBlackListService;
 
@@ -27,8 +29,10 @@ import lombok.RequiredArgsConstructor;
 public class AuthController {
 
     private final AuthService authService;
+    
     private final TokenBlackListService blacklistService;
 
+    @RequiresRole({ RoleEnum.ADMIN })
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequestDTO request) {
         try {
@@ -40,6 +44,7 @@ public class AuthController {
         }
     }
 
+    @RequiresRole({ RoleEnum.USER, RoleEnum.ADMIN })
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO request) {
         try {
@@ -51,6 +56,7 @@ public class AuthController {
         }
     }
 
+    @RequiresRole({ RoleEnum.USER, RoleEnum.ADMIN })
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request) {
         String token = request.getHeader("Authorization");
@@ -81,6 +87,7 @@ public class AuthController {
         }
     }
 
+    @RequiresRole({ RoleEnum.USER, RoleEnum.ADMIN })
     @PostMapping("/change-password")
     public ResponseEntity<MessageResponseDTO> changePassword(
         @Valid @RequestBody ChangePasswordRequestDTO request,
