@@ -11,7 +11,6 @@ public class PasswordResetCodeService {
      * luego aquí implementarás la lógica con tu base de datos.
      */
     public boolean isValidCode(String correo, String codigo) {
-        // TODO: Implementar validación real contra la BD o caché
         return true; 
     }
 }

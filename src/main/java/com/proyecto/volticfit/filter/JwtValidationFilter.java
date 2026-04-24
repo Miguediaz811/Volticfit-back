@@ -11,6 +11,7 @@ import com.proyecto.volticfit.service.JwtService;
 import com.proyecto.volticfit.service.TokenBlackListService;
 
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ public class JwtValidationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain filterChain) throws IOException {
+            FilterChain filterChain) throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
 
@@ -50,16 +51,9 @@ public class JwtValidationFilter extends OncePerRequestFilter {
             if (jwtService.isTokenValid(token)) {
                 String correo = jwtService.extractCorreo(token);
                 String rol = jwtService.extractRol(token);
+                
                 Users user = usersRepository.findByCorreo(correo)
                         .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado para el token"));
-                // #region agent log
-                DebugLogUtil.log(
-                        "H3",
-                        "JwtValidationFilter:doFilterInternal",
-                        "token_valid_user_resolved",
-                        "{\"path\":\"" + request.getServletPath() + "\",\"userResolved\":" + (user != null)
-                                + ",\"rolPresent\":" + (rol != null && !rol.isBlank()) + "}");
-                // #endregion
 
                 request.setAttribute("userId", user.getId_usuario());
                 request.setAttribute("correo", correo);
@@ -72,14 +66,6 @@ public class JwtValidationFilter extends OncePerRequestFilter {
                 response.getWriter().write("{\"error\": \"Token inválido o expirado\"}");
             }
         } catch (Exception e) {
-            // #region agent log
-            DebugLogUtil.log(
-                    "H3",
-                    "JwtValidationFilter:doFilterInternal",
-                    "token_validation_exception",
-                    "{\"path\":\"" + request.getServletPath() + "\",\"exceptionType\":\""
-                            + e.getClass().getSimpleName() + "\"}");
-            // #endregion
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write("{\"error\": \"Error al validar el token\"}");
@@ -89,16 +75,10 @@ public class JwtValidationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        boolean skip = path.equals("/auth/login")
+        // Solo añadimos la ruta de restore para que no te pida token
+        return path.equals("/auth/login")
                 || path.equals("/auth/register")
-                || path.equals("/auth/refresh");
-        // #region agent log
-        DebugLogUtil.log(
-                "H2",
-                "JwtValidationFilter:shouldNotFilter",
-                "route_filter_decision",
-                "{\"path\":\"" + path + "\",\"skipFilter\":" + skip + "}");
-        // #endregion
-        return skip;
+                || path.equals("/auth/refresh")
+                || path.equals("/auth/restore-password");
     }
 }
