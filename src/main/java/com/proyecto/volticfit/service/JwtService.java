@@ -6,8 +6,10 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import com.proyecto.volticfit.entity.Users;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -15,22 +17,30 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Service responsible for JWT token management.
- * Handles creation, validation, and extraction of token claims.
+ * Servicio encargado de la gestión de tokens JWT para Volticfit.
+ * Maneja el ciclo de vida de los tokens: creación, validación, refresco y recuperación.
  */
 @Service
+@Log4j2
 public class JwtService {
 
     private final String secretKey;
-    
     private final Long tokenExpiration;
+    private final Long recoveryExpiration;
 
-    // El constructor recibe las propiedades del application.yml
+    /**
+     * Constructor con inyección de dependencias desde .yaml.
+     * @param secretKey Llave secreta en Base64.
+     * @param tokenExpiration Tiempo de expiración de acceso.
+     * @param recoveryExpiration Tiempo de expiración para recuperación (Requisito: no quemado).
+     */
     public JwtService(
             @Value("${security.jwt.secret-key}") String secretKey,
-            @Value("${security.jwt.token-expiration}") Long tokenExpiration) {
+            @Value("${security.jwt.token-expiration:3600000}") Long tokenExpiration,
+            @Value("${security.jwt.recovery-expiration:900000}") Long recoveryExpiration) {
         this.secretKey = secretKey;
         this.tokenExpiration = tokenExpiration;
+        this.recoveryExpiration = recoveryExpiration;
     }
 
     private SecretKey getSigningKey() {
@@ -38,6 +48,9 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    /**
+     * Genera un token de acceso estándar.
+     */
     public String generateToken(String email, String role) {
         return Jwts.builder()
                 .claims(Map.of("role", role))
@@ -49,17 +62,30 @@ public class JwtService {
     }
 
     /**
-     * Método para recuperar contraseña (fijo a 15 min = 900,000 ms)
+     * Genera un token para el flujo de reset de contraseña usando el email.
      */
     public String generateResetToken(String email) {
         return Jwts.builder()
                 .subject(email)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 900000))
+                .expiration(new Date(System.currentTimeMillis() + recoveryExpiration))
                 .signWith(getSigningKey())
                 .compact();
     }
 
+    /**
+     * Genera un token específico para la recuperación de contraseña usando la entidad Users.
+     * Requerido por AuthService:[139,34].
+     * @param user Entidad del usuario.
+     * @return String JWT.
+     */
+    public String generateRecoveryToken(Users user) {
+        return generateResetToken(user.getEmail());
+    }
+
+    /**
+     * Refresca un token existente extrayendo sus claims actuales.
+     */
     public String refreshToken(String token) {
         Claims claims;
         try {
@@ -69,26 +95,16 @@ public class JwtService {
                     .parseSignedClaims(token)
                     .getPayload();
         } catch (ExpiredJwtException e) {
-            // Allow refresh even if token is expired
             claims = e.getClaims();
-        } catch (JwtException e) {
-            throw new RuntimeException("Token is invalid: " + e.getMessage());
         }
-
         return generateToken(claims.getSubject(), claims.get("role", String.class));
-
     }
 
-    public boolean isTokenValid(String token) {
-        try {
-            Jwts.parser()
-                    .verifyWith(getSigningKey())
-                    .build()
-                    .parseSignedClaims(token);
-            return true;
-        } catch (JwtException e) {
-            return false;
-        }
+    /**
+     * Extrae el rol almacenado en los claims del token.
+     */
+    public String extractRole(String token) {
+        return extractClaims(token, claims -> claims.get("role", String.class));
     }
 
     public String extractEmail(String token) {
@@ -104,10 +120,13 @@ public class JwtService {
         return resolver.apply(claims);
     }
 
-    /**
-     * Extrae el rol para poder refrescar el token o validar permisos
-     */
-    public String extractRole(String token) {
-        return extractClaims(token, claims -> claims.get("rolE", String.class));
+    public boolean isTokenValid(String token) {
+        try {
+            Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token);
+            return true;
+        } catch (JwtException e) {
+            log.error("Token inválido: {}", e.getMessage());
+            return false;
+        }
     }
 }
