@@ -16,7 +16,7 @@ import lombok.Data;
  */
 @Entity
 @Data
-@Table(name = "sanciones")
+@Table(name = "Sanciones")
 public class Sanction {
     
     @Id
@@ -38,4 +38,5 @@ public class Sanction {
  
     @Column(name = "estado")
     private Boolean state;
+    
 }
