@@ -6,7 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.proyecto.volticfit.dto.MessageResponseDTO;
-import com.proyecto.volticfit.dto.UpdateUserDTO;
+import com.proyecto.volticfit.dto.Users.UpdateUserDTO;
 import com.proyecto.volticfit.entity.Users;
 import com.proyecto.volticfit.repository.UsersRepository;
 
