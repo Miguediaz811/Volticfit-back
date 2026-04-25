@@ -38,6 +38,7 @@ public class AuthController {
      * servicio de auth
      */
     private final AuthService authService;
+    
 
     /**
      * servicio de lista negra del token
