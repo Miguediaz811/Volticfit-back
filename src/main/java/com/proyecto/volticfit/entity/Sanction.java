@@ -10,6 +10,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+
+/**
+ * Entidad sanción representada en el sistema
+ */
 @Entity
 @Data
 @Table(name = "sanciones")
