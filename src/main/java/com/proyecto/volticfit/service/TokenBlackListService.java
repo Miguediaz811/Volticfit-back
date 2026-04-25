@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class TokenBlackListService {
 
-    // Token + fecha de expiración
     private final Map<String, Instant> blacklist = new ConcurrentHashMap<>();
 
     /**
