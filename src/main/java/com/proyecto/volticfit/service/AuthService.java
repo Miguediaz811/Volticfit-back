@@ -33,8 +33,6 @@ public class AuthService {
     // Inyectamos el JwtService para manejar la generación y validación de tokens JWT
     private final JwtService jwtService;
 
-    private final EmailService emailService;
-    private final PasswordResetCodeService passwordResetCodeService;
 
     public MessageResponseDTO register(RegisterRequestDTO request) {
         if (usersRepository.findByEmail(request.getEmail()).isPresent()) {
