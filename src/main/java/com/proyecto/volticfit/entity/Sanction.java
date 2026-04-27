@@ -16,7 +16,7 @@ import lombok.Data;
  */
 @Entity
 @Data
-@Table(name = "sanciones")
+@Table(name = "Sanciones")
 public class Sanction {
     
     @Id
