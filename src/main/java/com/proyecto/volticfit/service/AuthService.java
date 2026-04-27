@@ -36,8 +36,6 @@ public class AuthService {
     // JWT
     private final JwtService jwtService;
 
-    private final EmailService emailService;
-    private final PasswordResetCodeService passwordResetCodeService;
 
     public MessageResponseDTO register(RegisterRequestDTO request) {
         if (usersRepository.findByEmail(request.getEmail()).isPresent()) {

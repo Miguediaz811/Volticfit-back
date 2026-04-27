@@ -1,7 +1,5 @@
 package com.proyecto.volticfit.controller;
 
-import java.util.Map;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -88,11 +86,17 @@ public class UserController {
      * @return MessageResponseDTO con el mensaje de éxito o error de la inactivación de la cuenta
      */
     @PutMapping("/{id}/inactivar")
-    @RequiresRole(RoleEnum.ADMIN)
-    public ResponseEntity<MessageResponseDTO> deactivateAccount(@PathVariable Long id) {
+    public ResponseEntity<MessageResponseDTO> deactivateAccount(@PathVariable Long id, HttpServletRequest httpRequest) {
         try {
-            MessageResponseDTO response = userService.deactivateAccount(id);
+            String role = (String) httpRequest.getAttribute("role");
+            Long requesterId = (Long) httpRequest.getAttribute("userId");
+ 
+            MessageResponseDTO response = userService.deactivateAccount(id, role, requesterId);
             return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
         } catch (Exception e) {
             MessageResponseDTO error = new MessageResponseDTO();
             error.setMessage(e.getMessage());
