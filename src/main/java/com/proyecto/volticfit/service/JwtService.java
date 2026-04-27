@@ -26,9 +26,10 @@ public class JwtService {
     private final Long tokenExpiration;
 
     // El constructor recibe las propiedades del application.yml
+    // El constructor ahora recibe las propiedades correctas del application.yml
     public JwtService(
-            @Value("${security.jwt.secret-key}") String secretKey,
-            @Value("${security.jwt.token-expiration}") Long tokenExpiration) {
+            @Value("${app.jwt.secret}") String secretKey,
+            @Value("${app.jwt.expiration}") Long tokenExpiration) {
         this.secretKey = secretKey;
         this.tokenExpiration = tokenExpiration;
     }
