@@ -16,6 +16,7 @@ import com.proyecto.volticfit.entity.Users;
 import com.proyecto.volticfit.enums.RoleEnum;
 import com.proyecto.volticfit.security.RequiresRole;
 import com.proyecto.volticfit.service.AuthService;
+import com.proyecto.volticfit.service.JwtService;
 import com.proyecto.volticfit.service.TokenBlackListService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,7 +26,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
 import lombok.extern.log4j.Log4j2;
+
+import java.time.Instant;
+
 import java.util.List;
 
 @RestController
@@ -39,11 +44,15 @@ public class AuthController {
      * servicio de auth
      */
     private final AuthService authService;
+    
 
     /**
      * servicio de lista negra del token
      */
     private final TokenBlackListService blacklistService;
+
+        private final JwtService jwtService;
+
 
 
     @Operation(summary = "Register a new user",
@@ -111,11 +120,16 @@ public class AuthController {
      */
     @PostMapping("/logout")
     public ResponseEntity<MessageResponseDTO> logout(HttpServletRequest request) {
+
         String token = request.getHeader("Authorization");
         MessageResponseDTO response = new MessageResponseDTO();
+
         if (token != null && token.startsWith("Bearer ")) {
+            
             token = token.substring(7);
-            blacklistService.add(token);
+            
+            Instant expiration = jwtService.extractClaims(token, claims -> claims.getExpiration().toInstant());
+            blacklistService.blacklistToken(token, expiration);
             response.setMessage("Session closed");
             return ResponseEntity.ok(response);
         }
