@@ -31,7 +31,6 @@ public class RegisterRequestDTO {
     @Email(message = "El correo no es válido")
     private String email;
 
-    @NotBlank(message = "El campo es obligatorio")
     @NotNull(message = "El campo no puede ser nulo")
     private Long phone;
 
