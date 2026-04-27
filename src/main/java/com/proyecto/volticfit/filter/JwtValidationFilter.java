@@ -16,6 +16,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Filtro de seguridad que intercepta las peticiones HTTP para validar el token JWT.
+ * Verifica la autenticidad del token, comprueba la lista negra y establece los atributos del usuario en la petición.
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtValidationFilter extends OncePerRequestFilter {
@@ -24,6 +28,9 @@ public class JwtValidationFilter extends OncePerRequestFilter {
     private final TokenBlackListService blacklistService;
     private final UsersRepository usersRepository;
 
+    /**
+     * Procesa cada petición entrante para validar el esquema Bearer y la integridad del token.
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
             HttpServletResponse response,
@@ -72,10 +79,14 @@ public class JwtValidationFilter extends OncePerRequestFilter {
         }
     }
 
+    /**
+     * Define las rutas que quedan excluidas de la validación de JWT.
+     */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        // Solo añadimos la ruta de restore para que no te pida token
+        
+        /** Solo añadimos las rutas públicas y de recuperación para que no soliciten token */
         return path.equals("/auth/login")
                 || path.equals("/auth/register")
                 || path.equals("/auth/refresh")

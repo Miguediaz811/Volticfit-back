@@ -2,47 +2,22 @@ server:
   port: 9090
 
 spring:
-  application:
-    name: volticfit
-  
   datasource:
     url: jdbc:mysql://localhost:3306/volticfit
     username: root
-    password: 
+    password: ${MYSQL_PASSWORD:} # O tu contraseña directamente si no usas variables
     driver-class-name: com.mysql.cj.jdbc.Driver
-  
+
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: update # Muy importante para que no falle si las tablas ya existen
     show-sql: true
     properties:
       hibernate:
-        format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
 
-  # Configuración para el envío de correos
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    # Toma los datos del archivo .env que creamos
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
-        # Timeout para evitar que la app se quede colgada si falla la red
-        smtp.connectiontimeout: 5000
-        smtp.timeout: 5000
-        smtp.writetimeout: 5000
-
-# Configuración personalizada para JWT
+# Aquí es donde conectamos con el JwtService que editamos
 app:
   jwt:
-    # Toma la clave larga que generaste en la terminal
     secret: "svbGQQamFhy4mLFFXGUK/9YMDHSf135ikqvFF66FnRmSrl5rL/1GmBikDoezW9lM"
-    # 1 hora de expiración (en milisegundos)
     expiration: 3600000

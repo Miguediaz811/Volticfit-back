@@ -50,16 +50,15 @@ public class AuthController {
      */
     private final TokenBlackListService blacklistService;
 
-<<<<<<< HEAD
     /**
      * servicio de recuperación de contraseña
      */
     private final PasswordResetService passwordResetService;
-=======
-        private final JwtService jwtService;
 
-
->>>>>>> 14514fc2ac784ebfcfa09f1f2318a18a17fd11b5
+    /**
+     * servicio de JWT
+     */
+    private final JwtService jwtService;
 
     @Operation(summary = "Register a new user",
         responses = {
@@ -70,7 +69,6 @@ public class AuthController {
     )
     /**
      * Registro de usuarios
-
      */
     @PostMapping("/register")
     public ResponseEntity<MessageResponseDTO> register( @Valid @RequestBody RegisterRequestDTO request) {
@@ -93,7 +91,6 @@ public class AuthController {
     )
     /**
      * Login de usuarios
-
      */
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO request) {
@@ -115,7 +112,6 @@ public class AuthController {
     )
     /**
      * Cierre de sesión
-
      */
     @PostMapping("/logout")
     public ResponseEntity<MessageResponseDTO> logout(HttpServletRequest request) {
@@ -145,7 +141,6 @@ public class AuthController {
     )
     /**
      * Refrescar token
-
      */
     @GetMapping("/refresh")
     public ResponseEntity<RefreshTokenResponseDTO> refreshToken(HttpServletRequest request) {
@@ -173,7 +168,6 @@ public class AuthController {
     )
     /**
      * Recuperación de contraseña - Genera y envía el código al correo
-
      */
     @PostMapping("/forgot-password")
     public ResponseEntity<MessageResponseDTO> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDTO request) {
@@ -195,7 +189,6 @@ public class AuthController {
     )
     /**
      * Verificación del código de recuperación
-
      */
     @PostMapping("/recovery/verify")
     public ResponseEntity<MessageResponseDTO> verifyCode(@Valid @RequestBody VerifyCodeRequestDTO request) {
@@ -218,7 +211,6 @@ public class AuthController {
     )
     /**
      * Restablecimiento final de contraseña
-
      */
     @PostMapping("/recovery/reset")
     public ResponseEntity<MessageResponseDTO> resetPassword(@Valid @RequestBody RestorePasswordRequestDTO request) {

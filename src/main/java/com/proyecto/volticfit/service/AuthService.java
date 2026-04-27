@@ -20,22 +20,22 @@ import com.proyecto.volticfit.repository.UsersRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Servicio central para la gestión de seguridad, autenticación y ciclo de vida de usuarios.
+ * Maneja el registro, validación de credenciales y flujos de recuperación de cuenta.
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
-    // Inyectamos el PasswordEncoder para manejar el hashing de contraseñas
     private final PasswordEncoder passwordEncoder;
-
-    // Inyectamos el UsersRepository para acceder a los datos de usuarios
     private final UsersRepository usersRepository;
-
-    // Inyectamos el JwtService para manejar la generación y validación de tokens JWT
     private final JwtService jwtService;
-
     private final EmailService emailService;
-    private final PasswordResetCodeService passwordResetCodeService;
 
+    /**
+     * Registra un nuevo usuario cifrando su contraseña y validando duplicidad de correo.
+     */
     public MessageResponseDTO register(RegisterRequestDTO request) {
         if (usersRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Este correo ya está en uso");
@@ -57,10 +57,12 @@ public class AuthService {
         return response;
     }
 
+    /**
+     * Autentica al usuario y genera un token JWT si las credenciales son válidas y la cuenta está activa.
+     */
     public LoginResponseDTO login(LoginRequestDTO request) {
         Users user = usersRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
 
         if (!user.getState()) {
             throw new RuntimeException("This account is inactive");
@@ -84,6 +86,9 @@ public class AuthService {
         return response;
     }
 
+    /**
+     * Actualiza la contraseña de un usuario validando su identidad mediante la contraseña actual.
+     */
     @Transactional
     public MessageResponseDTO changePassword(Long userId, ChangePasswordRequestDTO request) {
         Users user = usersRepository.findById(userId)
@@ -101,9 +106,7 @@ public class AuthService {
     }
 
     /**
-     * Este método se encarga de actualizar la contraseña sin necesidad de conocer la actual,
-     *  ideal para casos de recuperación de contraseña. Se asume que el proceso de verificación 
-     * (como un token enviado por email) se ha manejado antes de llamar a este método.
+     * Restablece la contraseña de un usuario en el flujo de recuperación de cuenta.
      */
     @Transactional
     public MessageResponseDTO restorePassword(RestorePasswordRequestDTO request) {
@@ -118,7 +121,10 @@ public class AuthService {
         return response;
     }
 
-        public MessageResponseDTO verifyRecoveryCode(ForgotPasswordRequestDTO request) {
+    /**
+     * Inicia el flujo de recuperación de contraseña generando un token de seguridad.
+     */
+    public MessageResponseDTO initiatePasswordRecovery(ForgotPasswordRequestDTO request) {
         usersRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
  
@@ -129,17 +135,20 @@ public class AuthService {
         return response;
     }
  
+    /**
+     * Valida que el token proporcionado para la recuperación de cuenta sea auténtico y vigente.
+     */
     public MessageResponseDTO verifyRecoveryCode(VerifyCodeRequestDTO request) {
-        if (!jwtService.isTokenValid(request.getToken())) {
-            throw new RuntimeException("Invalid or expired recovery token");
-        }
- 
-        MessageResponseDTO response = new MessageResponseDTO();
-        response.setMessage("Token verified successfully");
-        return response;
+    // Cambiamos getToken() por getCode() para que coincida con el DTO
+    if (!jwtService.isTokenValid(request.getCode())) { 
+        throw new RuntimeException("Invalid or expired recovery token");
     }
 
-    //Listar usuarios activos
+    MessageResponseDTO response = new MessageResponseDTO();
+    response.setMessage("Token verified successfully");
+    return response;
+}
+
     public List<Users> getAllUsers() {
         return usersRepository.findByStateTrue();
     }
