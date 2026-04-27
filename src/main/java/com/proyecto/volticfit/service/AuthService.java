@@ -34,8 +34,8 @@ public class AuthService {
     private final JwtService jwtService;
 
     private final EmailService emailService;
-    private final PasswordResetCodeService passwordResetCodeService;
-
+    private final PasswordResetService passwordResetService;
+    
     public MessageResponseDTO register(RegisterRequestDTO request) {
         if (usersRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Este correo ya está en uso");
