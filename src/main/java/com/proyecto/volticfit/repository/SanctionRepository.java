@@ -13,6 +13,6 @@ import com.proyecto.volticfit.entity.Sanction;
 @Repository
 public interface SanctionRepository extends JpaRepository<Sanction, Long>{
 
-        List<Sanction> findByUsuarioSanctionListUserId(Long userId);
+        
 
 }

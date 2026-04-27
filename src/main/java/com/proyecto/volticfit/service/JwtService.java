@@ -108,6 +108,6 @@ public class JwtService {
      * Extrae el rol para poder refrescar el token o validar permisos
      */
     public String extractRole(String token) {
-        return extractClaims(token, claims -> claims.get("rolE", String.class));
+        return extractClaims(token, claims -> claims.get("role", String.class));
     }
 }
