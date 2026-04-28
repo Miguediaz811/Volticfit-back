@@ -1,31 +1,39 @@
 package com.proyecto.volticfit.service;
 
+import java.util.Date;
+import java.util.Map;
+import java.util.function.Function;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import javax.crypto.SecretKey;
-import java.util.Date;
-import java.util.Map;
-import java.util.function.Function;
 
 @Service
 public class JwtService {
 
     private final String secretKey;
+    
     private final Long tokenExpiration;
+
+    private final Long QRtokenExpiration;
 
     // El constructor recibe las propiedades del application.yml
     public JwtService(
             @Value("${security.jwt.secret-key}") String secretKey,
-            @Value("${security.jwt.token-expiration}") Long tokenExpiration) {
+            @Value("${security.jwt.token-expiration}") Long tokenExpiration,
+            @Value("${QRToken.QRtoken-expiration}") Long QRtokenExpiration
+            ) {
         this.secretKey = secretKey;
         this.tokenExpiration = tokenExpiration;
+        this.QRtokenExpiration = QRtokenExpiration;
     }
 
     private SecretKey getSigningKey() {
@@ -103,6 +111,49 @@ public class JwtService {
      * Extrae el rol para poder refrescar el token o validar permisos
      */
     public String extractRole(String token) {
-        return extractClaims(token, claims -> claims.get("rolE", String.class));
+        return extractClaims(token, claims -> claims.get("role", String.class));
+    }
+
+        /**
+     * Genera un token JWT de uso exclusivo para códigos QR.
+     *
+     * <p>Este token incluye un claim "type" con valor "QR" que permite
+     * diferenciarlo de los tokens de autenticación normales.</p>
+     *
+     * <p>El tiempo de expiración es corto (30 segundos) para evitar
+     * reutilización o uso indebido.</p>
+     *
+     * @param email correo del usuario autenticado
+     * @param role rol del usuario (se mantiene consistencia con otros tokens)
+     * @return token JWT diseñado para ser usado como QR
+     */
+    public String generateQrToken(String email, String role) {
+        return Jwts.builder()
+                .claims(Map.of(
+                        "role", role,
+                        "type", "QR"
+                ))
+                .subject(email)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() +  QRtokenExpiration)) 
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+        /**
+     * Verifica si un token JWT corresponde a un código QR.
+     *
+     * Se valida mediante el claim "type" que debe ser igual a "QR".
+     *
+     * @param token token JWT a evaluar
+     * @return true si es un token QR, false en caso contrario
+     */
+    public boolean isQrToken(String token) {
+        try {
+            String type = extractClaims(token, claims -> claims.get("type", String.class));
+            return "QR".equals(type);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
