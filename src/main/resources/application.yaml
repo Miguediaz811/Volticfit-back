@@ -40,3 +40,7 @@ security:
   jwt:
     secret-key: 7CBSJFF50p9t025oPtstXxCFJZTuQHagDAYWanTOagk=
     token-expiration: 600000
+
+QRToken:
+  secret-key: 7CBSJFF50p9t025oPtstXxCFJZTuQHagDAYWanTOagk=
+  QRtoken-expiration: 3600000;
