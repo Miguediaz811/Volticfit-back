@@ -3,6 +3,9 @@ package com.proyecto.volticfit.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+/**
+ * Entidad usuario representada en el sistema
+ */
 @Entity
 @Data
 @Table(name = "Usuario")

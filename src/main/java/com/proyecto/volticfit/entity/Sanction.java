@@ -10,9 +10,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+
+/**
+ * Entidad sanción representada en el sistema
+ */
 @Entity
 @Data
-@Table(name = "sanciones")
+@Table(name = "Sanciones")
 public class Sanction {
     
     @Id
@@ -34,4 +38,5 @@ public class Sanction {
  
     @Column(name = "estado")
     private Boolean state;
+    
 }
