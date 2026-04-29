@@ -21,6 +21,10 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
+/**
+ * Servicio central para la gestión de seguridad, autenticación y ciclo de vida de usuarios.
+ * Maneja el registro, validación de credenciales y flujos de recuperación de cuenta.
+ */
 @Service
 @Log4j2 // 1. Agregado para solucionar el error de "symbol: variable log"
 @RequiredArgsConstructor
@@ -30,13 +34,12 @@ public class AuthService {
 
     // Inyectamos el PasswordEncoder para manejar el hashing de contraseñas
     private final PasswordEncoder passwordEncoder;
-
-    // Inyectamos el UsersRepository para acceder a los datos de usuarios
     private final UsersRepository usersRepository;
 
     // Inyectamos el JwtService para manejar la generación y validación de tokens
     // JWT
     private final JwtService jwtService;
+    private final EmailService emailService;
 
     public MessageResponseDTO register(RegisterRequestDTO request) {
         if (usersRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -59,6 +62,9 @@ public class AuthService {
         return response;
     }
 
+    /**
+     * Autentica al usuario y genera un token JWT si las credenciales son válidas y la cuenta está activa.
+     */
     public LoginResponseDTO login(LoginRequestDTO request) {
         Users user = usersRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -157,13 +163,9 @@ public class AuthService {
      * @throws RuntimeException if the token is invalid or expired
      */
     public MessageResponseDTO verifyRecoveryCode(VerifyCodeRequestDTO request) {
-        if (!jwtService.isTokenValid(request.getToken())) {
-            throw new RuntimeException("Invalid or expired recovery token");
-        }
- 
-        MessageResponseDTO response = new MessageResponseDTO();
-        response.setMessage("Token verified successfully");
-        return response;
+    // Cambiamos getToken() por getCode() para que coincida con el DTO
+    if (!jwtService.isTokenValid(request.getCode())) { 
+        throw new RuntimeException("Invalid or expired recovery token");
     }
 
     // Listar usuarios activos
