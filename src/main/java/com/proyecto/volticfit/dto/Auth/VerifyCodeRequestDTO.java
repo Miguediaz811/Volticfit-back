@@ -3,18 +3,16 @@ package com.proyecto.volticfit.dto.Auth;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
+/**
+ * DTO para la verificación del código de recuperación
+ */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class VerifyCodeRequestDTO {
-
-    @NotBlank(message = "El campo es obligatorio")
-    @Email(message = "El correo no es válido")
+    @NotBlank
+    @Email
     private String email;
 
-    @NotBlank(message = "El campo es obligatorio")
-    private String token;
+    @NotBlank
+    private String code;
 }
