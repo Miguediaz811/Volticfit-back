@@ -185,7 +185,7 @@ public class AuthController {
     public ResponseEntity<MessageResponseDTO> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDTO request) {
         try {
             log.info("📧 Procesando solicitud de recuperación para: {}", request.getEmail());
-            return ResponseEntity.ok(authService.processForgotPassword(request.getEmail()));
+            return ResponseEntity.ok(authService.verifyRecoveryCode(request));
         } catch (Exception e) {
             MessageResponseDTO response = new MessageResponseDTO();
             response.setMessage("Si el correo existe, recibirá instrucciones en breve.");
