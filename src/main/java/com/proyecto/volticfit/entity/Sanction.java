@@ -38,4 +38,5 @@ public class Sanction {
  
     @Column(name = "estado")
     private Boolean state;
+    
 }
