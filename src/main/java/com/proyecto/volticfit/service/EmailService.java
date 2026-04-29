@@ -39,7 +39,8 @@ public class EmailService {
             String cuerpo = String.format(
                 AppConstants.RECOVERY_BODY_TEMPLATE, 
                 AppConstants.FRONTEND_URL, 
-                token
+                token,
+                AppConstants.RECOVERY_EXPIRATION_MINUTES
             );
             
             message.setText(cuerpo);
