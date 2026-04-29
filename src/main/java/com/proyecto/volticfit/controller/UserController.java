@@ -11,8 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.proyecto.volticfit.dto.MessageResponseDTO;
 import com.proyecto.volticfit.dto.Users.UpdateUserDTO;
-import com.proyecto.volticfit.enums.RoleEnum;
-import com.proyecto.volticfit.security.RequiresRole;
 import com.proyecto.volticfit.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
