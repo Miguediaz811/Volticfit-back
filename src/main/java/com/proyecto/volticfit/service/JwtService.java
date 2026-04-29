@@ -128,10 +128,5 @@ public class JwtService {
             log.error("Token inválido: {}", e.getMessage());
             return false;
         }
-    /**
-     * Extrae el rol para poder refrescar el token o validar permisos
-     */
-    public String extractRole(String token) {
-        return extractClaims(token, claims -> claims.get("role", String.class));
     }
 }
