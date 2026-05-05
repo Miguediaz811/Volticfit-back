@@ -15,12 +15,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 /**
  * Filtro de seguridad que intercepta las peticiones HTTP para validar el token JWT.
  * Verifica la autenticidad del token, comprueba la lista negra y establece los atributos del usuario en la petición.
  */
 @Component
+@Log4j2
 @RequiredArgsConstructor
 public class JwtValidationFilter extends OncePerRequestFilter {
 
@@ -73,6 +75,7 @@ public class JwtValidationFilter extends OncePerRequestFilter {
                 response.getWriter().write("{\"error\": \"Token inválido o expirado\"}");
             }
         } catch (Exception e) {
+            log.error("Error validating token: {}", e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write("{\"error\": \"Error al validar el token\"}");
@@ -86,12 +89,11 @@ public class JwtValidationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
         
-        /** Solo añadimos las rutas públicas y de recuperación para que no soliciten token */
+        /** Solo añadimos las rutas públicas y de recuperación para que no solic    iten token */
         return path.equals("/auth/login")
                 || path.equals("/auth/register")
                 || path.equals("/auth/refresh")
                 || path.equals("/auth/forgot-password")
-                || path.equals("/auth/recovery/verify")
                 || path.equals("/auth/recovery/reset")
                 || path.equals("/auth/restore-password");
     }

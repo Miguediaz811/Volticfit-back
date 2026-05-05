@@ -28,7 +28,7 @@ public class EmailService {
      * * @param destinatario El correo electrónico del usuario.
      * @param token El identificador único para validar el cambio de clave.
      */
-    public void enviarCorreoRecuperacion(String destinatario, String token) {
+    public void sendRecoveryCode(String destinatario, String token) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(destinatario);
@@ -46,10 +46,10 @@ public class EmailService {
             message.setText(cuerpo);
             mailSender.send(message);
             
-            log.info("📧 Correo de recuperación enviado con éxito a: {}", destinatario);
+            log.info("Recovery code sent successfully to: {}", destinatario);
             
         } catch (Exception e) {
-            log.error("❌ Error crítico al enviar correo a {}: {}", destinatario, e.getMessage());
+            log.error("Failed to send recovery code to {}: {}", destinatario, e.getMessage());
         }
     }
 }
