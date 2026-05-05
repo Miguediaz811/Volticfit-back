@@ -37,8 +37,9 @@ public class Users {
     @Column(name = "contraseña")
     private String password;
 
-    @Column(name = "rol")
-    private String role = "aprendiz";
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_rol", nullable = false)
+    private Role role;
 
     @Column(name = "estado")
     private Boolean state = true;
