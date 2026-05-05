@@ -49,6 +49,14 @@ public class AppConstants {
         "Hola,\n\nHas solicitado restablecer tu contraseña en Volticfit. " +
         "Haz clic en el siguiente enlace para continuar:\n\n%s/auth/reset-password?token=%s" +
         "\n\nEste enlace expirará en %d minutos. Si no fuiste tú, ignora este mensaje.";
+
+    /**
+     * Template for 6-digit code recovery email.
+     * Parameters: code, expiration minutes.
+     */
+    public static final String RECOVERY_CODE_TEMPLATE =
+        "Hola,\n\nTu código de recuperación de contraseña es:\n\n%s" +
+        "\n\nEste código expirará en %d minutos. Si no fuiste tú, ignora este mensaje.";
  
     /**
      * Initializes static variables after Spring injects @Value fields.
@@ -59,10 +67,7 @@ public class AppConstants {
         MAIL_FROM = mailFrom;
         TOKEN_EXPIRATION_TIME = tokenExpiration;
         RECOVERY_EXPIRATION_MINUTES = recoveryExpirationMinutes;
- 
         log.info("Application constants loaded successfully.");
-        log.info("Frontend URL: {}", FRONTEND_URL);
-        log.info("Token expiration: {} ms", TOKEN_EXPIRATION_TIME);
-        log.info("Recovery expiration: {} minutes", RECOVERY_EXPIRATION_MINUTES);
+
     }
 }
