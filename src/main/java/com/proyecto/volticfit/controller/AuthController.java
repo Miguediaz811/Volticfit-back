@@ -198,31 +198,6 @@ public class AuthController {
     }
 
     /**
-     * Valida si el código de recuperación ingresado por el usuario es correcto y vigente.
-     * * @param request DTO con el código de verificación y email.
-     * @return ResponseEntity con MessageResponseDTO confirmando la validez del código.
-     */
-    @Operation(summary = "Verify recovery code",
-        responses = {
-            @ApiResponse(responseCode = "200", description = "Code verified successfully",
-                content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid or expired code")
-        }
-    )
-    @PostMapping("/recovery/verify")
-    public ResponseEntity<MessageResponseDTO> verifyCode(@Valid @RequestBody VerifyCodeRequestDTO request) {
-        try {
-            log.info("🛡️ Verificando código de recuperación.");
-            MessageResponseDTO response = authService.verifyRecoveryCode(request);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            MessageResponseDTO error = new MessageResponseDTO();
-            error.setMessage(e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-        }
-    }
-
-    /**
      * Finaliza el proceso de recuperación estableciendo una nueva contraseña.
      * * @param request DTO con el token de validación y la nueva clave.
      * @return ResponseEntity con MessageResponseDTO confirmando el éxito del cambio.
