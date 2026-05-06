@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
     private final UsersRepository usersRepository;
+    
     private final PasswordEncoder passwordEncoder;
 
     public MessageResponseDTO updateUser(Long id, UpdateUserDTO request, String requesterRole, Long requesterId) {
