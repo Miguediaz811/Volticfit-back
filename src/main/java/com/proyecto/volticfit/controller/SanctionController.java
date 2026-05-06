@@ -5,11 +5,18 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.proyecto.volticfit.dto.MessageResponseDTO;
+import com.proyecto.volticfit.dto.Sanctions.CreateSanctionDTO;
+import com.proyecto.volticfit.dto.Sanctions.UpdateSanctionDTO;
 import com.proyecto.volticfit.entity.Sanction;
 import com.proyecto.volticfit.enums.RoleEnum;
 import com.proyecto.volticfit.security.RequiresRole;
@@ -20,6 +27,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -33,60 +41,126 @@ public class SanctionController {
      */
     private final SanctionService sanctionService;
 
-    @Operation(summary = "List sanctions - ADMIN sees all, user sees only their own",
-        responses = {
-            @ApiResponse(responseCode = "200", description = "Sanctions retrieved successfully",
-                content = @Content(schema = @Schema(implementation = Sanction.class))),
-            @ApiResponse(responseCode = "400", description = "Error retrieving sanctions")
-        }
-    )
 
-    /**
-     * Listar sanciones
-     * 
-     * @param request datos de la solicitud para obtener el rol y userId del usuario
-     * @return List<Sanction> con la lista de sanciones del usuario o todas las sanciones si es ADMIN
-     */
+    @Operation(summary = "List sanctions - ADMIN sees all, user sees only their own",
+            responses = {
+                @ApiResponse(responseCode = "200", description = "Sanctions retrieved successfully",
+                        content = @Content(schema = @Schema(implementation = Sanction.class))),
+                @ApiResponse(responseCode = "400", description = "Error retrieving sanctions",
+                        content = @Content(schema = @Schema(implementation = MessageResponseDTO.class)))
+            })
     @GetMapping
-    public ResponseEntity<List<Sanction>> getSanctions(HttpServletRequest request) {
+    public ResponseEntity<Object> getSanctions(HttpServletRequest request) {
         try {
             String role = (String) request.getAttribute("role");
             Long userId = (Long) request.getAttribute("userId");
  
+            List<Sanction> sanctions;
+ 
             if (RoleEnum.ADMIN.getValue().equalsIgnoreCase(role)) {
-                return ResponseEntity.ok(sanctionService.getAll());
+                sanctions = sanctionService.getAll();
             } else {
-                return ResponseEntity.ok(sanctionService.getByUser(userId));
+                sanctions = sanctionService.getByUser(userId);
             }
+ 
+            if (sanctions.isEmpty()) {
+                MessageResponseDTO response = new MessageResponseDTO();
+                response.setMessage("No sanctions found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+ 
+            return ResponseEntity.ok(sanctions);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
-
  
     @Operation(summary = "Get sanction by ID - ADMIN only",
-        responses = {
-            @ApiResponse(responseCode = "200", description = "Sanction retrieved successfully",
-                content = @Content(schema = @Schema(implementation = Sanction.class))),
-            @ApiResponse(responseCode = "400", description = "Sanction not found"),
-            @ApiResponse(responseCode = "403", description = "Access denied")
-        }
-    )
-
-    /**
-     * Obtener sanción por ID
-     * 
-     * @param id ID de la sanción
-     * @return Sanction con los datos de la sanción o mensaje de error
-     */
+            responses = {
+                @ApiResponse(responseCode = "200", description = "Sanction retrieved successfully",
+                        content = @Content(schema = @Schema(implementation = Sanction.class))),
+                @ApiResponse(responseCode = "400", description = "Sanction not found",
+                        content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
+                @ApiResponse(responseCode = "403", description = "Access denied",
+                        content = @Content(schema = @Schema(implementation = MessageResponseDTO.class)))
+            })
     @GetMapping("/{id}")
     @RequiresRole(RoleEnum.ADMIN)
-    public ResponseEntity<?> getSanctionById(@PathVariable Long id) {
+    public ResponseEntity<Object> getSanctionById(@PathVariable Long id) {
         try {
             Sanction sanction = sanctionService.getById(id);
             return ResponseEntity.ok(sanction);
+        } catch (RuntimeException e) {
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        }
+    }
+
+    @Operation(summary = "Create a sanction and assign it to a user - ADMIN only",
+        responses = {
+            @ApiResponse(responseCode = "201", description = "Sanction created successfully",
+                content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Error creating sanction"),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+        }
+    )
+    @PostMapping
+    @RequiresRole(RoleEnum.ADMIN)
+    public ResponseEntity<MessageResponseDTO> createSanction(@Valid @RequestBody CreateSanctionDTO request) {
+        try {
+            MessageResponseDTO response = sanctionService.create(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    @Operation(summary = "Update a sanction - ADMIN only",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Sanction updated successfully",
+                content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Sanction not found"),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+        }
+    )
+    @PutMapping("/{id}")
+    @RequiresRole(RoleEnum.ADMIN)
+    public ResponseEntity<MessageResponseDTO> updateSanction(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateSanctionDTO request) {
+        try {
+            MessageResponseDTO response = sanctionService.update(id, request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        }
+    }
+
+    @Operation(summary = "Deactivate a sanction - ADMIN only",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Sanction deactivated successfully",
+                content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Sanction not found"),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+        }
+    )
+    @DeleteMapping("/{id}")
+    @RequiresRole(RoleEnum.ADMIN)
+    public ResponseEntity<MessageResponseDTO> deleteSanction(@PathVariable Long id) {
+        try {
+            MessageResponseDTO response = sanctionService.delete(id);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
         }
     }
 }

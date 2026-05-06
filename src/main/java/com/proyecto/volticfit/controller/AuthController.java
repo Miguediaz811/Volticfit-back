@@ -16,6 +16,7 @@ import com.proyecto.volticfit.entity.Users;
 import com.proyecto.volticfit.enums.RoleEnum;
 import com.proyecto.volticfit.security.RequiresRole;
 import com.proyecto.volticfit.service.AuthService;
+import com.proyecto.volticfit.service.PasswordResetService;
 import com.proyecto.volticfit.service.JwtService;
 import com.proyecto.volticfit.service.TokenBlackListService;
 
@@ -33,6 +34,9 @@ import java.time.Instant;
 
 import java.util.List;
 
+/**
+ * Controlador para gestionar la autenticación y recuperación de cuentas
+ */
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -45,15 +49,20 @@ public class AuthController {
      */
     private final AuthService authService;
     
-
     /**
      * servicio de lista negra del token
      */
     private final TokenBlackListService blacklistService;
 
-        private final JwtService jwtService;
+    /**
+     * servicio de recuperación de contraseña
+     */
+    private final PasswordResetService passwordResetService;
 
-
+    /**
+     * servicio de JWT
+     */
+    private final JwtService jwtService;
 
     @Operation(summary = "Register a new user",
         responses = {
@@ -62,7 +71,6 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Email already in use")
         }
     )
-
     /**
      * Registro de usuarios
      * * @param request datos del registro
@@ -87,7 +95,6 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Invalid credentials or inactive account")
         }
     )
-
     /**
      * Login de usuarios
      * * @param request datos del login
@@ -105,14 +112,12 @@ public class AuthController {
         }
     }
 
-
     @Operation(summary = "Logout - invalidates the current token",
         responses = {
             @ApiResponse(responseCode = "200", description = "Session closed"),
             @ApiResponse(responseCode = "400", description = "Token not provided")
         }
     )
-
     /**
      * Cierre de sesión
      * * @param request datos de la solicitud
@@ -144,7 +149,6 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Invalid token")
         }
     )
-
     /**
      * Refrescar token
      * * @param request datos de la solicitud 
@@ -178,43 +182,18 @@ public class AuthController {
     @Operation(summary = "Forgot password",
         responses = {
             @ApiResponse(responseCode = "200", description = "Recovery process initiated"),
-            @ApiResponse(responseCode = "400", description = "Invalid request data")
+            @ApiResponse(responseCode = "404", description = "User not found")
         }
     )
     @PostMapping("/forgot-password")
     public ResponseEntity<MessageResponseDTO> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDTO request) {
         try {
             log.info("📧 Procesando solicitud de recuperación para: {}", request.getEmail());
-            return ResponseEntity.ok(authService.processForgotPassword(request.getEmail()));
+            return ResponseEntity.ok(authService.verifyRecoveryCode(request));
         } catch (Exception e) {
             MessageResponseDTO response = new MessageResponseDTO();
             response.setMessage("Si el correo existe, recibirá instrucciones en breve.");
             return ResponseEntity.status(HttpStatus.OK).body(response);
-        }
-    }
-
-    /**
-     * Valida si el código de recuperación ingresado por el usuario es correcto y vigente.
-     * * @param request DTO con el código de verificación y email.
-     * @return ResponseEntity con MessageResponseDTO confirmando la validez del código.
-     */
-    @Operation(summary = "Verify recovery code",
-        responses = {
-            @ApiResponse(responseCode = "200", description = "Code verified successfully",
-                content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid or expired code")
-        }
-    )
-    @PostMapping("/recovery/verify")
-    public ResponseEntity<MessageResponseDTO> verifyCode(@Valid @RequestBody VerifyCodeRequestDTO request) {
-        try {
-            log.info("🛡️ Verificando código de recuperación.");
-            MessageResponseDTO response = authService.verifyRecoveryCode(request);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            MessageResponseDTO error = new MessageResponseDTO();
-            error.setMessage(e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
 
@@ -227,7 +206,7 @@ public class AuthController {
         responses = {
             @ApiResponse(responseCode = "200", description = "Password reset successfully",
                 content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "User not found")
+            @ApiResponse(responseCode = "400", description = "Error during reset")
         }
     )
     @PostMapping("/recovery/reset")
@@ -250,7 +229,6 @@ public class AuthController {
             @ApiResponse(responseCode = "403", description = "Access denied")
         }
     )
-
     /**
      * Listar usuarios
      * * @return List<Users> con la lista de usuarios
