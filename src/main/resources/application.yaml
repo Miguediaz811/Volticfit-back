@@ -46,7 +46,3 @@ security:
 QRToken:
   secret-key: 7CBSJFF50p9t025oPtstXxCFJZTuQHagDAYWanTOagk=
   QRtoken-expiration: 3600000;
-    secret-key: ${JWT_SECRET:Y29tLnByb3llY3RvLnZvbHRpY2ZpdC5zZWNyZXQua2V5LnZlcnkuc2VjdXJlLmJhc2U2NC5kZW1v}
-    # Ojo aquí: tu JwtService busca 'token-expiration', no 'expiration-time'
-    token-expiration: ${JWT_EXPIRATION:3600000}
-    recovery-expiration: ${JWT_RECOVERY_EXP:900000}
