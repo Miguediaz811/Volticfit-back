@@ -28,4 +28,11 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
      */
     List<Users> findByStateTrue();
 
+    /**
+     * Find a user by their document number.
+     *
+     * @param docNum the document number
+     * @return an Optional containing the user if found
+     */
+    Optional<Users> findByDocNum(String docNum);
 }
