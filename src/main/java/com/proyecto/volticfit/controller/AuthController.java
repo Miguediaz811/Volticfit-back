@@ -11,12 +11,10 @@ import com.proyecto.volticfit.dto.Auth.LoginResponseDTO;
 import com.proyecto.volticfit.dto.Auth.RefreshTokenResponseDTO;
 import com.proyecto.volticfit.dto.Auth.RegisterRequestDTO;
 import com.proyecto.volticfit.dto.Auth.RestorePasswordRequestDTO;
-import com.proyecto.volticfit.dto.Auth.VerifyCodeRequestDTO;
 import com.proyecto.volticfit.entity.Users;
 import com.proyecto.volticfit.enums.RoleEnum;
 import com.proyecto.volticfit.security.RequiresRole;
 import com.proyecto.volticfit.service.AuthService;
-import com.proyecto.volticfit.service.PasswordResetService;
 import com.proyecto.volticfit.service.JwtService;
 import com.proyecto.volticfit.service.TokenBlackListService;
 
@@ -57,7 +55,6 @@ public class AuthController {
     /**
      * servicio de recuperación de contraseña
      */
-    private final PasswordResetService passwordResetService;
 
     /**
      * servicio de JWT
