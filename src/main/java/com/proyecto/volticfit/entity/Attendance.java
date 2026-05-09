@@ -2,9 +2,6 @@ package com.proyecto.volticfit.entity;
 
 import java.time.LocalDateTime;
 
-import com.google.zxing.qrcode.encoder.QRCode;
-import com.proyecto.volticfit.entity.QrCode;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
