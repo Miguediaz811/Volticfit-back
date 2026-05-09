@@ -1,14 +1,5 @@
 package com.proyecto.volticfit.service;
 
-import java.util.Date;
-import java.util.Map;
-import java.util.function.Function;
-
-import javax.crypto.SecretKey;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -27,33 +18,24 @@ import java.util.function.Function;
 
 /**
  * Servicio encargado de la gestión de tokens JWT para Volticfit.
- * Maneja el ciclo de vida de los tokens: creación, validación, refresco y recuperación.
+ * Maneja el ciclo de vida de los tokens: creación, validación, refresco y
+ * recuperación.
  */
 @Service
 @Log4j2
 public class JwtService {
 
     private final String secretKey;
-    
     private final Long tokenExpiration;
     private final Long recoveryExpiration;
 
-    private final Long QRtokenExpiration;
-
-    // El constructor recibe las propiedades del application.yml
-    public JwtService(
-            @Value("${security.jwt.secret-key}") String secretKey,
-            @Value("${security.jwt.token-expiration}") Long tokenExpiration,
-            @Value("${QRToken.QRtoken-expiration}") Long QRtokenExpiration
-            ) {
-        this.secretKey = secretKey;
-        this.tokenExpiration = tokenExpiration;
-        this.QRtokenExpiration = QRtokenExpiration;
     /**
      * Constructor con inyección de dependencias desde .yaml.
-     * @param secretKey Llave secreta en Base64.
-     * @param tokenExpiration Tiempo de expiración de acceso.
-     * @param recoveryExpiration Tiempo de expiración para recuperación (Requisito: no quemado).
+     * 
+     * @param secretKey          Llave secreta en Base64.
+     * @param tokenExpiration    Tiempo de expiración de acceso.
+     * @param recoveryExpiration Tiempo de expiración para recuperación (Requisito:
+     *                           no quemado).
      */
     public JwtService(
             @Value("${security.jwt.secret-key}") String secretKey,
@@ -95,8 +77,10 @@ public class JwtService {
     }
 
     /**
-     * Genera un token específico para la recuperación de contraseña usando la entidad Users.
+     * Genera un token específico para la recuperación de contraseña usando la
+     * entidad Users.
      * Requerido por AuthService:[139,34].
+     * 
      * @param user Entidad del usuario.
      * @return String JWT.
      */
@@ -151,45 +135,28 @@ public class JwtService {
         }
     }
 
-        /**
-     * Genera un token JWT de uso exclusivo para códigos QR.
-     *
-     * <p>Este token incluye un claim "type" con valor "QR" que permite
-     * diferenciarlo de los tokens de autenticación normales.</p>
-     *
-     * <p>El tiempo de expiración es corto (30 segundos) para evitar
-     * reutilización o uso indebido.</p>
-     *
-     * @param email correo del usuario autenticado
-     * @param role rol del usuario (se mantiene consistencia con otros tokens)
-     * @return token JWT diseñado para ser usado como QR
+    /**
+     * Genera un token específico para validación por QR.
      */
     public String generateQrToken(String email, String role) {
         return Jwts.builder()
-                .claims(Map.of(
-                        "role", role,
-                        "type", "QR"
-                ))
+                .claims(Map.of("role", role, "type", "QR"))
                 .subject(email)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() +  QRtokenExpiration)) 
+                .expiration(new Date(System.currentTimeMillis() + 300000L)) // 5 minutos, ajusta según necesites
                 .signWith(getSigningKey())
                 .compact();
     }
 
-        /**
-     * Verifica si un token JWT corresponde a un código QR.
-     *
-     * Se valida mediante el claim "type" que debe ser igual a "QR".
-     *
-     * @param token token JWT a evaluar
-     * @return true si es un token QR, false en caso contrario
+    /**
+     * Verifica si un token es de tipo QR.
      */
     public boolean isQrToken(String token) {
         try {
             String type = extractClaims(token, claims -> claims.get("type", String.class));
             return "QR".equals(type);
-        } catch (Exception e) {
+        } catch (JwtException e) {
+            log.error("Error al verificar token QR: {}", e.getMessage());
             return false;
         }
     }
