@@ -1,9 +1,7 @@
 package com.proyecto.volticfit.controller;
 
-import java.time.LocalDate;
 import java.util.List;
 
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -13,11 +11,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyecto.volticfit.dto.MessageResponseDTO;
-import com.proyecto.volticfit.dto.Reservation.AforoResponseDTO;
 import com.proyecto.volticfit.dto.Reservation.CreateReservationDTO;
 import com.proyecto.volticfit.enums.RoleEnum;
 import com.proyecto.volticfit.security.RequiresRole;
@@ -31,7 +27,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Controlador para gestionar el control de aforo por franja horaria (HU27).
+ * Controlador para gestionar las reservas de turnos (HU26).
+ * Solo el admin puede crear reservas para los usuarios.
  */
 @RestController
 @RequestMapping("/api/reservations")
@@ -40,23 +37,6 @@ import lombok.RequiredArgsConstructor;
 public class ReservationController {
 
     private final ReservationService reservationService;
-
-    @Operation(summary = "Consultar aforo por franja horaria - ADMIN only",
-        description = "Retorna el aforo actual de cada franja horaria para una fecha. Si no se indica fecha, usa hoy.",
-        responses = {
-            @ApiResponse(responseCode = "200", description = "Aforo obtenido exitosamente",
-                content = @Content(schema = @Schema(implementation = AforoResponseDTO.class))),
-            @ApiResponse(responseCode = "403", description = "Acceso denegado")
-        }
-    )
-    @GetMapping("/aforo")
-    @RequiresRole(RoleEnum.ADMIN)
-    public ResponseEntity<AforoResponseDTO> getAforo(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        LocalDate targetDate = (date != null) ? date : LocalDate.now();
-        AforoResponseDTO response = reservationService.getAforoByDate(targetDate);
-        return ResponseEntity.ok(response);
-    }
 
     @Operation(summary = "Obtener franjas horarias disponibles",
         responses = {
@@ -72,7 +52,7 @@ public class ReservationController {
         responses = {
             @ApiResponse(responseCode = "201", description = "Reserva creada exitosamente",
                 content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Aforo completo o datos inválidos"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos o reserva duplicada"),
             @ApiResponse(responseCode = "403", description = "Acceso denegado")
         }
     )

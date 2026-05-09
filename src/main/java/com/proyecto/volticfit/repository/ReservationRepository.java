@@ -42,4 +42,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
      */
     @Query("SELECT COUNT(r) > 0 FROM Reservation r WHERE r.user.idUser = :userId AND r.reservationDate = :date AND r.timeSlot = :timeSlot AND r.state = true")
     boolean existsActiveByUserAndDateAndTimeSlot(@Param("userId") Long userId, @Param("date") LocalDate date, @Param("timeSlot") String timeSlot);
+
+    /**
+     * Obtiene todas las reservas activas de un usuario.
+     */
+    List<Reservation> findByUserIdUserAndStateTrue(Long userId);
 }

@@ -8,9 +8,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.proyecto.volticfit.dto.MessageResponseDTO;
-import com.proyecto.volticfit.dto.Reservation.AforoResponseDTO;
 import com.proyecto.volticfit.dto.Reservation.CreateReservationDTO;
-import com.proyecto.volticfit.dto.Reservation.TimeSlotAforoDTO;
 import com.proyecto.volticfit.entity.Reservation;
 import com.proyecto.volticfit.entity.Users;
 import com.proyecto.volticfit.repository.ReservationRepository;
@@ -21,21 +19,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 /**
- * Servicio para gestionar el control de aforo por franja horaria (HU27).
- * Las franjas son fijas de 2 horas. El aforo máximo es 20 personas.
+ * Servicio para gestionar las reservas de turnos (HU26).
+ * Solo el admin puede crear reservas para los usuarios.
+ * Las franjas son fijas de 2 horas.
  */
 @Service
 @Log4j2
 @RequiredArgsConstructor
 public class ReservationService {
 
-    /** Aforo máximo del gimnasio */
-    private static final int MAX_CAPACITY = 20;
-
     /**
      * Franjas horarias fijas de 2 horas disponibles en el gimnasio.
      */
-    private static final List<String> TIME_SLOTS = Arrays.asList(
+    public static final List<String> TIME_SLOTS = Arrays.asList(
             "06:00-08:00",
             "08:00-10:00",
             "10:00-12:00",
@@ -57,24 +53,8 @@ public class ReservationService {
     }
 
     /**
-     * Consulta el aforo actual por franja horaria para una fecha específica.
-     * Criterio 1 de HU27: siempre muestra aforo por franja.
-     * Criterio 3: marca "Aforo completo" si se alcanza el límite.
-     *
-     * @param date fecha a consultar
-     * @return AforoResponseDTO con el detalle de cada franja
-     */
-    public AforoResponseDTO getAforoByDate(LocalDate date) {
-        List<TimeSlotAforoDTO> slots = TIME_SLOTS.stream()
-                .map(slot -> buildTimeSlotAforo(slot, date))
-                .toList();
-
-        return new AforoResponseDTO(date, slots);
-    }
-
-    /**
-     * Crea una reserva en una franja horaria validando el aforo disponible.
-     * Criterio 2 de HU27: muestra usuarios registrados y ocupación.
+     * Crea una reserva en una franja horaria para un usuario.
+     * Solo el admin puede invocar este método.
      *
      * @param request DTO con los datos de la reserva
      * @return MessageResponseDTO con el resultado
@@ -98,19 +78,10 @@ public class ReservationService {
             throw new RuntimeException("El usuario ya tiene una reserva en esta franja horaria");
         }
 
-        // 4. Validar aforo disponible
-        long currentOccupancy = reservationRepository.countActiveByDateAndTimeSlot(
-                request.getReservationDate(), request.getTimeSlot());
-
-        if (currentOccupancy >= MAX_CAPACITY) {
-            throw new RuntimeException("Aforo completo para la franja " + request.getTimeSlot() +
-                    ". No hay cupos disponibles.");
-        }
-
-        // 5. Calcular hora inicio y fin a partir de la franja
+        // 4. Calcular hora inicio y fin a partir de la franja
         LocalTime[] times = parseTimeSlot(request.getTimeSlot());
 
-        // 6. Crear y guardar la reserva
+        // 5. Crear y guardar la reserva
         Reservation reservation = new Reservation();
         reservation.setUser(user);
         reservation.setReservationDate(request.getReservationDate());
@@ -123,8 +94,7 @@ public class ReservationService {
         log.info("Reserva creada para usuario ID: {} en franja: {} del {}",
                 user.getIdUser(), request.getTimeSlot(), request.getReservationDate());
 
-        long remaining = MAX_CAPACITY - currentOccupancy - 1;
-        return new MessageResponseDTO("Reserva registrada exitosamente. Cupos restantes en la franja: " + remaining);
+        return new MessageResponseDTO("Reserva registrada exitosamente");
     }
 
     /**
@@ -146,19 +116,15 @@ public class ReservationService {
     }
 
     /**
-     * Construye el DTO de aforo para una franja y fecha específica.
+     * Obtiene todas las reservas activas de un usuario.
+     *
+     * @param userId ID del usuario
+     * @return lista de reservas
      */
-    private TimeSlotAforoDTO buildTimeSlotAforo(String slot, LocalDate date) {
-        long occupancy = reservationRepository.countActiveByDateAndTimeSlot(date, slot);
-        long available = MAX_CAPACITY - occupancy;
-        boolean isFull = occupancy >= MAX_CAPACITY;
-
-        List<String> users = reservationRepository.findActiveByDateAndTimeSlot(date, slot)
-                .stream()
-                .map(r -> r.getUser().getNames() + " " + r.getUser().getSurnames())
-                .toList();
-
-        return new TimeSlotAforoDTO(slot, occupancy, MAX_CAPACITY, available, isFull, users);
+    public List<Reservation> getReservationsByUser(Long userId) {
+        usersRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        return reservationRepository.findByUserIdUserAndStateTrue(userId);
     }
 
     /**
