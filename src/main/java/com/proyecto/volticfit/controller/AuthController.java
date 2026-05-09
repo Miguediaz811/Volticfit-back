@@ -2,19 +2,8 @@ package com.proyecto.volticfit.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-<<<<<<< HEAD
-import com.proyecto.volticfit.dto.LoginRequestDTO;
-import com.proyecto.volticfit.dto.LoginResponseDTO;
-import com.proyecto.volticfit.dto.MessageResponseDTO;
-import com.proyecto.volticfit.dto.RefreshTokenResponseDTO;
-import com.proyecto.volticfit.dto.RegisterRequestDTO;
-=======
 import com.proyecto.volticfit.dto.MessageResponseDTO;
 import com.proyecto.volticfit.dto.Auth.ForgotPasswordRequestDTO;
 import com.proyecto.volticfit.dto.Auth.LoginRequestDTO;
@@ -25,7 +14,6 @@ import com.proyecto.volticfit.dto.Auth.RestorePasswordRequestDTO;
 import com.proyecto.volticfit.entity.Users;
 import com.proyecto.volticfit.enums.RoleEnum;
 import com.proyecto.volticfit.security.RequiresRole;
->>>>>>> b19ca583b364e99cd7cd83e250db446e53962c6f
 import com.proyecto.volticfit.service.AuthService;
 import com.proyecto.volticfit.service.JwtService;
 import com.proyecto.volticfit.service.TokenBlackListService;
@@ -35,6 +23,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import lombok.extern.log4j.Log4j2;
@@ -49,11 +38,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-<<<<<<< HEAD
-=======
 @Log4j2
 @CrossOrigin(origins = "http://localhost:4200")
->>>>>>> b19ca583b364e99cd7cd83e250db446e53962c6f
 public class AuthController {
 
     /**
@@ -93,14 +79,9 @@ public class AuthController {
             MessageResponseDTO response = authService.register(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
-<<<<<<< HEAD
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new java.util.HashMap<>(java.util.Map.of("error", e.getMessage())));
-=======
             MessageResponseDTO error = new MessageResponseDTO();
             error.setMessage(e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
->>>>>>> b19ca583b364e99cd7cd83e250db446e53962c6f
         }
     }
 
@@ -122,25 +103,6 @@ public class AuthController {
             LoginResponseDTO response = authService.login(request);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
-<<<<<<< HEAD
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new java.util.HashMap<>(java.util.Map.of("error", e.getMessage())));
-        }
-    }
-
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-        if (token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7);
-            blacklistService.add(token);
-            return ResponseEntity.ok(new java.util.HashMap<>(java.util.Map.of("message", "Sesión cerrada")));
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new java.util.HashMap<>(java.util.Map.of("error", "Token no proporcionado")));
-    }
-
-=======
             LoginResponseDTO error = new LoginResponseDTO();
             error.setMessage(e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
@@ -189,18 +151,12 @@ public class AuthController {
      * * @param request datos de la solicitud 
      * @return RefreshTokenResponseDTO con el nuevo token o mensaje de error
      */
->>>>>>> b19ca583b364e99cd7cd83e250db446e53962c6f
     @GetMapping("/refresh")
     public ResponseEntity<RefreshTokenResponseDTO> refreshToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-<<<<<<< HEAD
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new java.util.HashMap<>(java.util.Map.of("error", "Header Authorization faltante")));
-=======
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
->>>>>>> b19ca583b364e99cd7cd83e250db446e53962c6f
         }
 
         String token = authHeader.substring(7);
@@ -209,13 +165,6 @@ public class AuthController {
             RefreshTokenResponseDTO response = authService.refreshToken(token);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-<<<<<<< HEAD
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new java.util.HashMap<>(java.util.Map.of("error", e.getMessage())));
-        }
-    }
-}
-=======
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
     }
@@ -292,4 +241,3 @@ public class AuthController {
         }
     }
 }
->>>>>>> b19ca583b364e99cd7cd83e250db446e53962c6f
