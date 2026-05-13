@@ -3,12 +3,14 @@ package com.proyecto.volticfit.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.proyecto.volticfit.entity.Attendance;
 
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
- 
+
     /**
      * Find all attendance records for a specific user.
      *
@@ -16,7 +18,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
      * @return list of attendance records
      */
     List<Attendance> findByUserIdUser(Long userId);
- 
+
     /**
      * Find the open attendance record (no exit time) for a user.
      *
@@ -24,4 +26,13 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
      * @return an Optional containing the open attendance if found
      */
     Optional<Attendance> findByUserIdUserAndExitTimeIsNull(Long userId);
+
+    /**
+     * Find paginated attendance records for a specific user.
+     *
+     * @param userId   the user ID
+     * @param pageable pagination configuration
+     * @return paginated attendance records
+     */
+    Page<Attendance> findByUserIdUser(Long userId, Pageable pageable);
 }
