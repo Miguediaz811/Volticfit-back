@@ -1,9 +1,6 @@
 package com.proyecto.volticfit.service;
 
-public class RutinaService {
-    
-}
-package com.proyecto.volticfit.service;
+
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
