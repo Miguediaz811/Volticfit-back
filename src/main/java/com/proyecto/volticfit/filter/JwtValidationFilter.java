@@ -87,6 +87,10 @@ public class JwtValidationFilter extends OncePerRequestFilter {
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
+        
         String path = request.getServletPath();
         
         /** Solo añadimos las rutas públicas y de recuperación para que no solic    iten token */

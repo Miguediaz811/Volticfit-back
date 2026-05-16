@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.proyecto.volticfit.dto.MessageResponseDTO;
+import com.proyecto.volticfit.dto.Auth.ChangePasswordRequestDTO;
 import com.proyecto.volticfit.dto.Auth.ForgotPasswordRequestDTO;
 import com.proyecto.volticfit.dto.Auth.LoginRequestDTO;
 import com.proyecto.volticfit.dto.Auth.LoginResponseDTO;
@@ -39,14 +40,13 @@ import java.util.List;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @Log4j2
-@CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
 
     /**
      * servicio de auth
      */
     private final AuthService authService;
-    
+
     /**
      * servicio de lista negra del token
      */
@@ -61,20 +61,18 @@ public class AuthController {
      */
     private final JwtService jwtService;
 
-    @Operation(summary = "Register a new user",
-        responses = {
-            @ApiResponse(responseCode = "201", description = "User registered successfully",
-                content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
+    @Operation(summary = "Register a new user", responses = {
+            @ApiResponse(responseCode = "201", description = "User registered successfully", content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "Email already in use")
-        }
-    )
+    })
     /**
      * Registro de usuarios
      * * @param request datos del registro
-     * @return MessageResponseDTO 
+     * 
+     * @return MessageResponseDTO
      */
     @PostMapping("/register")
-    public ResponseEntity<MessageResponseDTO> register( @Valid @RequestBody RegisterRequestDTO request) {
+    public ResponseEntity<MessageResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request) {
         try {
             MessageResponseDTO response = authService.register(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -85,16 +83,14 @@ public class AuthController {
         }
     }
 
-    @Operation(summary = "Login",
-        responses = {
-            @ApiResponse(responseCode = "200", description = "Login successful",
-                    content = @Content(schema = @Schema(implementation = LoginResponseDTO.class))),
+    @Operation(summary = "Login", responses = {
+            @ApiResponse(responseCode = "200", description = "Login successful", content = @Content(schema = @Schema(implementation = LoginResponseDTO.class))),
             @ApiResponse(responseCode = "401", description = "Invalid credentials or inactive account")
-        }
-    )
+    })
     /**
      * Login de usuarios
      * * @param request datos del login
+     * 
      * @return LoginResponseDTO con el token y datos del usuario
      */
     @PostMapping("/login")
@@ -109,15 +105,14 @@ public class AuthController {
         }
     }
 
-    @Operation(summary = "Logout - invalidates the current token",
-        responses = {
+    @Operation(summary = "Logout - invalidates the current token", responses = {
             @ApiResponse(responseCode = "200", description = "Session closed"),
             @ApiResponse(responseCode = "400", description = "Token not provided")
-        }
-    )
+    })
     /**
      * Cierre de sesión
      * * @param request datos de la solicitud
+     * 
      * @return MessageResponseDTO con el mensaje de éxito o error
      */
     @PostMapping("/logout")
@@ -127,9 +122,9 @@ public class AuthController {
         MessageResponseDTO response = new MessageResponseDTO();
 
         if (token != null && token.startsWith("Bearer ")) {
-            
+
             token = token.substring(7);
-            
+
             Instant expiration = jwtService.extractClaims(token, claims -> claims.getExpiration().toInstant());
             blacklistService.blacklistToken(token, expiration);
             response.setMessage("Session closed");
@@ -139,16 +134,15 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
-    @Operation(summary = "Refresh token",
-        responses = {
+    @Operation(summary = "Refresh token", responses = {
             @ApiResponse(responseCode = "200", description = "Token refreshed successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid or missing token"),
             @ApiResponse(responseCode = "401", description = "Invalid token")
-        }
-    )
+    })
     /**
      * Refrescar token
-     * * @param request datos de la solicitud 
+     * * @param request datos de la solicitud
+     * 
      * @return RefreshTokenResponseDTO con el nuevo token o mensaje de error
      */
     @GetMapping("/refresh")
@@ -172,16 +166,17 @@ public class AuthController {
     // --- BLOQUE DE RECUPERACIÓN EDITADO ---
 
     /**
-     * Inicia el proceso de recuperación enviando un código/enlace al email proporcionado.
+     * Inicia el proceso de recuperación enviando un código/enlace al email
+     * proporcionado.
      * * @param request DTO con el correo del usuario.
-     * @return ResponseEntity con MessageResponseDTO informando el estado del proceso.
+     * 
+     * @return ResponseEntity con MessageResponseDTO informando el estado del
+     *         proceso.
      */
-    @Operation(summary = "Forgot password",
-        responses = {
+    @Operation(summary = "Forgot password", responses = {
             @ApiResponse(responseCode = "200", description = "Recovery process initiated"),
             @ApiResponse(responseCode = "404", description = "User not found")
-        }
-    )
+    })
     @PostMapping("/forgot-password")
     public ResponseEntity<MessageResponseDTO> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDTO request) {
         try {
@@ -197,15 +192,14 @@ public class AuthController {
     /**
      * Finaliza el proceso de recuperación estableciendo una nueva contraseña.
      * * @param request DTO con el token de validación y la nueva clave.
-     * @return ResponseEntity con MessageResponseDTO confirmando el éxito del cambio.
+     * 
+     * @return ResponseEntity con MessageResponseDTO confirmando el éxito del
+     *         cambio.
      */
-    @Operation(summary = "Reset password",
-        responses = {
-            @ApiResponse(responseCode = "200", description = "Password reset successfully",
-                content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
+    @Operation(summary = "Reset password", responses = {
+            @ApiResponse(responseCode = "200", description = "Password reset successfully", content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "Error during reset")
-        }
-    )
+    })
     @PostMapping("/recovery/reset")
     public ResponseEntity<MessageResponseDTO> resetPassword(@Valid @RequestBody RestorePasswordRequestDTO request) {
         try {
@@ -220,12 +214,10 @@ public class AuthController {
 
     // --- FIN DEL BLOQUE DE RECUPERACIÓN ---
 
-    @Operation(summary = "List all active users - ADMIN only",
-        responses = {
+    @Operation(summary = "List all active users - ADMIN only", responses = {
             @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
             @ApiResponse(responseCode = "403", description = "Access denied")
-        }
-    )
+    })
     /**
      * Listar usuarios
      * * @return List<Users> con la lista de usuarios
@@ -239,5 +231,13 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<MessageResponseDTO> changePassword(
+            @Valid @RequestBody ChangePasswordRequestDTO request,
+            HttpServletRequest httpRequest) {
+        Long userId = (Long) httpRequest.getAttribute("userId");
+        return ResponseEntity.ok(authService.changePassword(userId, request));
     }
 }
