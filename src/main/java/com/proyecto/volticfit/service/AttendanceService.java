@@ -8,13 +8,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
-import com.proyecto.volticfit.dto.MessageResponseDTO;
+import com.proyecto.volticfit.dto.Attendance.AttendanceListResponseDTO;
 import com.proyecto.volticfit.dto.Attendance.AttendanceResponseDTO;
 import com.proyecto.volticfit.dto.Attendance.ManualAttendanceRequestDTO;
 import com.proyecto.volticfit.dto.QrCode.QrResponseDTO;
@@ -46,6 +50,7 @@ public class AttendanceService {
     private final QrCodeRepository qrCodeRepository;
     private final AttendanceRepository attendanceRepository;
     private final UserSanctionRepository userSanctionRepository;
+    private final JwtService jwtService;
 
     /**
      * Generates a unique QR code for a user's gym visit.
@@ -160,6 +165,39 @@ public class AttendanceService {
         Users user = usersRepository.findByDocNum(docNumber)
                 .orElseThrow(() -> new RuntimeException("User not found with that document number"));
         return buildValidResponse(user, "FOUND", "User found");
+    }
+
+    /**
+     * Returns paginated attendance history for the authenticated user.
+     *
+     * @param authHeader the Authorization header with Bearer token
+     * @param page       page number (0-based)
+     * @param size       page size
+     * @return paginated list of attendance records
+     */
+    public Page<AttendanceListResponseDTO> getAttendanceHistory(String authHeader, int page, int size) {
+        String token = authHeader.replace("Bearer ", "");
+
+        if (!jwtService.isTokenValid(token)) {
+            throw new RuntimeException("Invalid token");
+        }
+
+        String email = jwtService.extractEmail(token);
+
+        Users user = usersRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("entryTime").descending());
+
+        return attendanceRepository.findByUserIdUser(user.getIdUser(), pageable)
+                .map(att -> new AttendanceListResponseDTO(
+                        att.getIdAttendance(),
+                        user.getNames() + " " + user.getSurnames(),
+                        user.getDocNum(),
+                        att.getEntryTime(),
+                        att.getExitTime(),
+                        att.getRegistrationType()
+                ));
     }
 
     // --- Private helpers ---
