@@ -14,7 +14,6 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
-import com.proyecto.volticfit.dto.MessageResponseDTO;
 import com.proyecto.volticfit.dto.Attendance.AttendanceResponseDTO;
 import com.proyecto.volticfit.dto.Attendance.ManualAttendanceRequestDTO;
 import com.proyecto.volticfit.dto.QrCode.QrResponseDTO;
@@ -43,8 +42,11 @@ public class AttendanceService {
     private static final int QR_SIZE = 300;
 
     private final UsersRepository usersRepository;
+    
     private final QrCodeRepository qrCodeRepository;
+
     private final AttendanceRepository attendanceRepository;
+    
     private final UserSanctionRepository userSanctionRepository;
 
     /**
