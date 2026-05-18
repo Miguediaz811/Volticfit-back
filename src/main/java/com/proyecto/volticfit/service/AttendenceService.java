@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 public class AttendenceService {
 
     private final AttendenceRepository attendenceRepository;
+    
     private final JwtService jwtService;
 
     /**

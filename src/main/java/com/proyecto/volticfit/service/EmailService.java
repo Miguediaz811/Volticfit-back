@@ -3,7 +3,9 @@ package com.proyecto.volticfit.service;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+
 import com.proyecto.volticfit.config.AppConstants;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -50,6 +52,46 @@ public class EmailService {
             
         } catch (Exception e) {
             log.error("Failed to send recovery code to {}: {}", destinatario, e.getMessage());
+        }
+    }
+
+        public void sendNotificationEmail(
+            String destinatario,
+            String asunto,
+            String contenido
+    ) {
+
+        try {
+
+            SimpleMailMessage message =
+                    new SimpleMailMessage();
+
+            message.setTo(destinatario);
+
+            message.setFrom(AppConstants.MAIL_FROM);
+
+            message.setSubject(asunto);
+
+            message.setText(contenido);
+
+            mailSender.send(message);
+
+            log.info(
+                    "Notification email sent successfully to: {}",
+                    destinatario
+            );
+
+        } catch (Exception e) {
+
+            log.error(
+                    "Failed to send notification email to {}: {}",
+                    destinatario,
+                    e.getMessage()
+            );
+
+            throw new RuntimeException(
+                    "Error sending notification email"
+            );
         }
     }
 }
