@@ -21,4 +21,16 @@ public class GlobalExceptionHandler {
                 ex.getMessage()
         );
     }
+
+    @ExceptionHandler(TimeTableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleTimeTableException(
+            TimeTableException ex
+    ) {
+
+        return Map.of(
+                "error",
+                ex.getMessage()
+        );
+    }
 }
