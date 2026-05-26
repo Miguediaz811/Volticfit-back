@@ -63,7 +63,7 @@ public class SanctionService {
      */
     public List<Sanction> getByUser(Long userId) {
         if (userId == null) {
-            throw new RuntimeException("User ID must not be null");
+            throw new RuntimeException("No se pudo identificar el usuario");
         }
         List<Sanction> sanctions = userSanctionRepository.findByUserIdUser(userId)
                 .stream()
@@ -79,7 +79,7 @@ public class SanctionService {
     @Transactional
     public MessageResponseDTO create(CreateSanctionDTO request) {
         Users user = usersRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("No se encontro el usuario"));
 
         Sanction sanction = new Sanction();
         sanction.setDescription(request.getDescription());
@@ -102,7 +102,7 @@ public class SanctionService {
         log.info("Sanction created and assigned to user: {}", user.getIdUser());
 
         MessageResponseDTO response = new MessageResponseDTO();
-        response.setMessage("Sanction created successfully");
+        response.setMessage("Sancion registrada correctamente");
         return response;
     }
 
@@ -116,7 +116,7 @@ public class SanctionService {
     @Transactional
     public MessageResponseDTO update(Long id, UpdateSanctionDTO request) {
         Sanction sanction = sanctionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Sanction not found"));
+                .orElseThrow(() -> new RuntimeException("No se encontro la sancion"));
 
         if (request.getDescription() != null) sanction.setDescription(request.getDescription());
         if (request.getType() != null) sanction.setType(request.getType());
@@ -128,7 +128,7 @@ public class SanctionService {
         log.info("Sanction updated: {}", id);
 
         MessageResponseDTO response = new MessageResponseDTO();
-        response.setMessage("Sanction updated successfully");
+        response.setMessage("Sancion actualizada correctamente");
         return response;
     }
 
@@ -141,7 +141,7 @@ public class SanctionService {
     @Transactional
     public MessageResponseDTO delete(Long id) {
         Sanction sanction = sanctionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Sanction not found"));
+                .orElseThrow(() -> new RuntimeException("No se encontro la sancion"));
 
         sanction.setState(false);
         sanctionRepository.save(sanction);
@@ -149,7 +149,7 @@ public class SanctionService {
         log.info("Sanction deactivated: {}", id);
 
         MessageResponseDTO response = new MessageResponseDTO();
-        response.setMessage("Sanction deactivated successfully");
+        response.setMessage("Sancion inactivada correctamente");
         return response;
     }
 }
