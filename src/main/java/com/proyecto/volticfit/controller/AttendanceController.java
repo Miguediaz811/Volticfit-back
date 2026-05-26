@@ -1,9 +1,11 @@
 package com.proyecto.volticfit.controller;
 
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,7 +18,6 @@ import com.proyecto.volticfit.dto.Attendance.ManualAttendanceRequestDTO;
 import com.proyecto.volticfit.dto.QrCode.QrResponseDTO;
 import com.proyecto.volticfit.service.AttendanceService;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -50,7 +51,12 @@ public class AttendanceController {
     public ResponseEntity<AttendanceResponseDTO> scanQR(
             @RequestBody AttendanceRequestDTO request
     ) {
-        return ResponseEntity.ok(attendanceService.processQRScan(request.getToken()));
+        try {
+            return ResponseEntity.ok(attendanceService.processQRScan(request.getToken()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new AttendanceResponseDTO("ERROR", e.getMessage(), null, null, null, null, null, null, null, null));
+        }
     }
  
     /**
@@ -63,7 +69,12 @@ public class AttendanceController {
     public ResponseEntity<AttendanceResponseDTO> manualAttendance(
             @RequestBody ManualAttendanceRequestDTO request
     ) {
-        return ResponseEntity.ok(attendanceService.processManualAttendance(request));
+        try {
+            return ResponseEntity.ok(attendanceService.processManualAttendance(request));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new AttendanceResponseDTO("ERROR", e.getMessage(), null, null, null, null, null, null, null, null));
+        }
     }
  
     /**
