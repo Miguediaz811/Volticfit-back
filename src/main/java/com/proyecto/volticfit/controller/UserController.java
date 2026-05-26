@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyecto.volticfit.dto.MessageResponseDTO;
+import com.proyecto.volticfit.dto.Users.UpdateUserRoleDTO;
+import com.proyecto.volticfit.dto.Users.UpdateUserStateDTO;
 import com.proyecto.volticfit.dto.Users.UpdateUserDTO;
 import com.proyecto.volticfit.entity.Users;
 import com.proyecto.volticfit.repository.UsersRepository;
@@ -82,6 +84,60 @@ public class UserController {
             String role       = (String) httpRequest.getAttribute("role");
             Long requesterId  = (Long)   httpRequest.getAttribute("userId");
             return ResponseEntity.ok(userService.updateUser(id, request, role, requesterId));
+        } catch (RuntimeException e) {
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        } catch (Exception e) {
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    @Operation(summary = "Update user role - ADMIN only",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "User role updated successfully",
+                content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "400", description = "Error updating user role")
+        }
+    )
+    @PutMapping("/{id}/rol")
+    public ResponseEntity<MessageResponseDTO> updateUserRole(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateUserRoleDTO request,
+            HttpServletRequest httpRequest) {
+        try {
+            String role = (String) httpRequest.getAttribute("role");
+            return ResponseEntity.ok(userService.updateUserRole(id, request, role));
+        } catch (RuntimeException e) {
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        } catch (Exception e) {
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    @Operation(summary = "Update user state - ADMIN only",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "User state updated successfully",
+                content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "400", description = "Error updating user state")
+        }
+    )
+    @PutMapping("/{id}/estado")
+    public ResponseEntity<MessageResponseDTO> updateUserState(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateUserStateDTO request,
+            HttpServletRequest httpRequest) {
+        try {
+            String role = (String) httpRequest.getAttribute("role");
+            return ResponseEntity.ok(userService.updateUserState(id, request, role));
         } catch (RuntimeException e) {
             MessageResponseDTO error = new MessageResponseDTO();
             error.setMessage(e.getMessage());

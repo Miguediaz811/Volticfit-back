@@ -127,10 +127,10 @@ public class AuthController {
 
             Instant expiration = jwtService.extractClaims(token, claims -> claims.getExpiration().toInstant());
             blacklistService.blacklistToken(token, expiration);
-            response.setMessage("Session closed");
+            response.setMessage("Sesion cerrada correctamente");
             return ResponseEntity.ok(response);
         }
-        response.setMessage("Token not provided");
+        response.setMessage("No se pudo cerrar la sesion");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
@@ -163,10 +163,10 @@ public class AuthController {
         }
     }
 
-    // --- BLOQUE DE RECUPERACIÓN EDITADO ---
+    // --- BLOQUE DE RECUPERACI脫N EDITADO ---
 
     /**
-     * Inicia el proceso de recuperación enviando un código/enlace al email
+     * Inicia el proceso de recuperaci贸n enviando un c贸digo/enlace al email
      * proporcionado.
      * * @param request DTO con el correo del usuario.
      * 
@@ -180,11 +180,11 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public ResponseEntity<MessageResponseDTO> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDTO request) {
         try {
-            log.info("📧 Procesando solicitud de recuperación para: {}", request.getEmail());
+            log.info("馃摟 Procesando solicitud de recuperaci贸n para: {}", request.getEmail());
             return ResponseEntity.ok(authService.verifyRecoveryCode(request));
         } catch (Exception e) {
             MessageResponseDTO response = new MessageResponseDTO();
-            response.setMessage("Si el correo existe, recibirá instrucciones en breve.");
+            response.setMessage("Si el correo existe, recibir谩 instrucciones en breve.");
             return ResponseEntity.status(HttpStatus.OK).body(response);
         }
     }
@@ -203,7 +203,7 @@ public class AuthController {
     @PostMapping("/recovery/reset")
     public ResponseEntity<MessageResponseDTO> resetPassword(@Valid @RequestBody RestorePasswordRequestDTO request) {
         try {
-            log.info("🔑 Actualizando contraseña del usuario.");
+            log.info("馃攽 Actualizando contrase帽a del usuario.");
             return ResponseEntity.ok(authService.restorePassword(request));
         } catch (Exception e) {
             MessageResponseDTO error = new MessageResponseDTO();
@@ -212,9 +212,9 @@ public class AuthController {
         }
     }
 
-    // --- FIN DEL BLOQUE DE RECUPERACIÓN ---
+    // --- FIN DEL BLOQUE DE RECUPERACI脫N ---
 
-    @Operation(summary = "List all active users - ADMIN only", responses = {
+    @Operation(summary = "List all users, including inactive accounts - ADMIN only", responses = {
             @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
             @ApiResponse(responseCode = "403", description = "Access denied")
     })
