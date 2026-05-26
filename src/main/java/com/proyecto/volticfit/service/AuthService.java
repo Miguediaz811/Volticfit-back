@@ -50,7 +50,7 @@ public class AuthService {
         }
  
         Role defaultRole = rolRepository.findByName(DEFAULT_ROLE)
-                .orElseThrow(() -> new RuntimeException("Default role not found"));
+                .orElseThrow(() -> new RuntimeException("No se encontro el rol inicial"));
  
         Users user = new Users();
         user.setNames(request.getNames());
@@ -80,7 +80,7 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
  
         if (!user.getState()) {
-            throw new RuntimeException("This account is inactive");
+            throw new RuntimeException("Tu cuenta esta inactiva");
         }
  
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
@@ -155,12 +155,12 @@ public class AuthService {
     }
 
     /**
-     * Returns all active users.
+     * Returns all users, including inactive accounts.
      *
-     * @return list of active users
+     * @return list of users
      */
     public List<Users> getAllUsers() {
-        return usersRepository.findByStateTrue();
+        return usersRepository.findAll();
     }
 }
  

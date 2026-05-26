@@ -14,6 +14,7 @@ import com.proyecto.volticfit.entity.Users;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 /**
@@ -140,10 +141,13 @@ public class JwtService {
      */
     public String generateQrToken(String email, String role) {
         return Jwts.builder()
-                .claims(Map.of("role", role, "type", "QR"))
+                .id(UUID.randomUUID().toString())
+                .claims(Map.of(
+                        "role", role,
+                        "type", "QR"))
                 .subject(email)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 300000L)) // 5 minutos, ajusta según necesites
+                .expiration(new Date(System.currentTimeMillis() + 300000L))
                 .signWith(getSigningKey())
                 .compact();
     }
