@@ -71,23 +71,23 @@ public class ReservationService {
     @Transactional
     public MessageResponseDTO createReservation(CreateReservationDTO request, Long userId) {
         if (!SHIFT_START_TIMES.contains(request.getStartTime())) {
-            throw new RuntimeException("Invalid shift time");
+            throw new RuntimeException("Selecciona un horario valido");
         }
  
         reservationRepository.findByDateAndStartTimeAndUserIdUserAndState(
                 request.getDate(), request.getStartTime(), userId, true)
                 .ifPresent(r -> {
-                    throw new RuntimeException("You already have a reservation for this shift");
+                    throw new RuntimeException("Ya tienes una reserva para este horario");
                 });
  
         int taken = reservationRepository.countByDateAndStartTimeAndState(
                 request.getDate(), request.getStartTime(), true);
         if (taken >= MAX_SPOTS) {
-            throw new RuntimeException("No spots available for this shift");
+            throw new RuntimeException("No hay cupos disponibles para este horario");
         }
  
         Users user = usersRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("No se encontro el usuario"));
  
         Reservation reservation = new Reservation();
         reservation.setUser(user);
@@ -100,7 +100,7 @@ public class ReservationService {
         log.info("Reservation created for user: {} on {} at {}", userId, request.getDate(), request.getStartTime());
  
         MessageResponseDTO response = new MessageResponseDTO();
-        response.setMessage("Reservation created successfully");
+        response.setMessage("Reserva creada correctamente");
         return response;
     }
  
@@ -115,17 +115,17 @@ public class ReservationService {
     @Transactional
     public MessageResponseDTO cancelReservation(Long reservationId, Long userId, String requesterRole) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new RuntimeException("Reservation not found"));
+                .orElseThrow(() -> new RuntimeException("No se encontro la reserva"));
  
         if (!"admin".equalsIgnoreCase(requesterRole) && !reservation.getUser().getIdUser().equals(userId)) {
-            throw new RuntimeException("You do not have permission to cancel this reservation");
+            throw new RuntimeException("No tienes permiso para cancelar esta reserva");
         }
  
         reservationRepository.delete(reservation);
         log.info("Reservation {} cancelled by user: {}", reservationId, userId);
  
         MessageResponseDTO response = new MessageResponseDTO();
-        response.setMessage("Reservation cancelled successfully");
+        response.setMessage("Reserva cancelada correctamente");
         return response;
     }
  
