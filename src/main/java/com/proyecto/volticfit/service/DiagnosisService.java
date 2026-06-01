@@ -4,10 +4,10 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.proyecto.volticfit.dto.CreateDiagnosisDTO;
-import com.proyecto.volticfit.dto.CreateMedicalRestrictionDTO;
 import com.proyecto.volticfit.dto.MessageResponseDTO;
-import com.proyecto.volticfit.dto.UpdateMedicalRestrictionDTO;
+import com.proyecto.volticfit.dto.Diagnosis.CreateDiagnosisDTO;
+import com.proyecto.volticfit.dto.MedicalRestiction.CreateMedicalRestrictionDTO;
+import com.proyecto.volticfit.dto.MedicalRestiction.UpdateMedicalRestrictionDTO;
 import com.proyecto.volticfit.entity.Diagnosis;
 import com.proyecto.volticfit.entity.MedicalRestriction;
 import com.proyecto.volticfit.entity.Users;
@@ -28,8 +28,13 @@ import lombok.extern.log4j.Log4j2;
 @RequiredArgsConstructor
 public class DiagnosisService {
 
+    // Inyectar el repositorio de diagnósticos para manejar las operaciones relacionadas con los diagnósticos de los usuarios
     private final DiagnosisRepository diagnosisRepository;
+
+    // Inyectar el repositorio de restricciones médicas para manejar las operaciones relacionadas con las restricciones médicas de los diagnósticos
     private final MedicalRestrictionRepository restrictionRepository;
+
+    // Inyectar el repositorio de usuarios para manejar las operaciones relacionadas con los usuarios
     private final UsersRepository usersRepository;
 
     /**

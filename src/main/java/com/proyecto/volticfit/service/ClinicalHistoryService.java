@@ -4,9 +4,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.proyecto.volticfit.dto.CreateClinicalHistoryDTO;
 import com.proyecto.volticfit.dto.MessageResponseDTO;
-import com.proyecto.volticfit.dto.UpdateClinicalHistoryDTO;
+import com.proyecto.volticfit.dto.ClinicalHistory.CreateClinicalHistoryDTO;
+import com.proyecto.volticfit.dto.ClinicalHistory.UpdateClinicalHistoryDTO;
 import com.proyecto.volticfit.entity.ClinicalHistory;
 import com.proyecto.volticfit.entity.Users;
 import com.proyecto.volticfit.repository.ClinicalHistoryRepository;
@@ -25,7 +25,10 @@ import lombok.extern.log4j.Log4j2;
 @RequiredArgsConstructor
 public class ClinicalHistoryService {
 
+    // Inyectar el repositorio de historial clínico para manejar las operaciones relacionadas con el historial clínico de los usuarios
     private final ClinicalHistoryRepository clinicalHistoryRepository;
+
+    // Inyectar el repositorio de usuarios para manejar las operaciones relacionadas con los usuarios
     private final UsersRepository usersRepository;
 
     /**

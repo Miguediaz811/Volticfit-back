@@ -6,10 +6,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.proyecto.volticfit.dto.CreateDiagnosisDTO;
-import com.proyecto.volticfit.dto.CreateMedicalRestrictionDTO;
 import com.proyecto.volticfit.dto.MessageResponseDTO;
-import com.proyecto.volticfit.dto.UpdateMedicalRestrictionDTO;
+import com.proyecto.volticfit.dto.Diagnosis.CreateDiagnosisDTO;
+import com.proyecto.volticfit.dto.MedicalRestiction.CreateMedicalRestrictionDTO;
+import com.proyecto.volticfit.dto.MedicalRestiction.UpdateMedicalRestrictionDTO;
 import com.proyecto.volticfit.entity.Diagnosis;
 import com.proyecto.volticfit.entity.MedicalRestriction;
 import com.proyecto.volticfit.enums.RoleEnum;
@@ -34,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Diagnosis", description = "Diagnosis and medical restriction endpoints")
 public class DiagnosisController {
 
+    // Inyectamos el servicio de Diagnosis para manejar la lógica de negocio relacionada con los diagnósticos y restricciones médicas
     private final DiagnosisService diagnosisService;
 
     @Operation(summary = "Create a diagnosis for a user - ADMIN only",

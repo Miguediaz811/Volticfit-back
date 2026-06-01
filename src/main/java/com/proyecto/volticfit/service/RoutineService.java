@@ -12,10 +12,10 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.proyecto.volticfit.dto.CompleteExerciseDTO;
-import com.proyecto.volticfit.dto.ExerciseResponseDTO;
 import com.proyecto.volticfit.dto.MessageResponseDTO;
-import com.proyecto.volticfit.dto.RoutineResponseDTO;
+import com.proyecto.volticfit.dto.Exercise.CompleteExerciseDTO;
+import com.proyecto.volticfit.dto.Exercise.ExerciseResponseDTO;
+import com.proyecto.volticfit.dto.Routine.RoutineResponseDTO;
 import com.proyecto.volticfit.entity.CompletedExercise;
 import com.proyecto.volticfit.entity.Diagnosis;
 import com.proyecto.volticfit.entity.Exercise;
@@ -47,17 +47,37 @@ import lombok.extern.log4j.Log4j2;
 @RequiredArgsConstructor
 public class RoutineService {
 
+    // Período mínimo de 28 días entre la generación de nuevas rutinas para un usuario, definido como una constante
     private static final int MIN_DAYS_BETWEEN_ROUTINES = 28;
 
+    // Repositorio para manejar las rutinas, utilizado para guardar las rutinas generadas por Gemini y mostrar los detalles de la rutina activa y el historial de rutinas de cada usuario
     private final RoutineRepository routineRepository;
+
+    // Repositorio para manejar los ejercicios asociados a las rutinas, utilizado para mostrar los detalles de la rutina activa y el historial de rutinas de cada usuario
     private final ExerciseRepository exerciseRepository;
+
+    // Repositorio para manejar la asignación de rutinas a los usuarios, utilizado para controlar la rutina activa y el historial de rutinas de cada usuario
     private final UserRoutineRepository userRoutineRepository;
+
+    // Repositorio para manejar los ejercicios completados por los usuarios, utilizado para mostrar el progreso en la rutina activa
     private final CompletedExerciseRepository completedExerciseRepository;
+
+    // Repositorio para manejar los diagnósticos asociados a los usuarios, utilizado para generar rutinas personalizadas basadas en el estado físico del usuario
     private final DiagnosisRepository diagnosisRepository;
+
+    // Repositorio para manejar las restricciones médicas asociadas a los diagnósticos de los usuarios
     private final MedicalRestrictionRepository restrictionRepository;
+
+    // Servicio para comunicarse con Gemini AI y generar rutinas personalizadas
     private final MachineRepository machineRepository;
+
+    // Repositorio de usuarios para manejar las operaciones relacionadas con los usuarios
     private final UsersRepository usersRepository;
+
+    // Servicio para comunicarse con Gemini AI y generar rutinas personalizadas
     private final GeminiService geminiService;
+
+    // ObjectMapper para parsear las respuestas JSON de Gemini
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**

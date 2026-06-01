@@ -24,9 +24,11 @@ import okhttp3.Response;
 @Log4j2
 public class GeminiService {
 
+  // URL base de la API de Gemini Flash, con un placeholder para la clave de API
     private static final String GEMINI_URL =
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=";
 
+    // Lista de máquinas disponibles en el gimnasio, que se incluirá en los prompts para la generación de rutinas
     private static final String AVAILABLE_MACHINES =
             "- Cinta de correr\n" +
             "- Bicicleta estática\n" +

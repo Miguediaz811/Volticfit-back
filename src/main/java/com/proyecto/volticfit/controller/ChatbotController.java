@@ -22,8 +22,10 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Chatbot", description = "Gym chatbot powered by Gemini AI")
 public class ChatbotController {
 
+    // Inyectamos el servicio de Gemini para manejar las interacciones con el chatbot
     private final GeminiService geminiService;
 
+    // DTOs internos para manejar las solicitudes y respuestas del chatbot
     @Data
     static class ChatRequest {
         @NotBlank(message = "Message is required")
@@ -36,6 +38,7 @@ public class ChatbotController {
         public ChatResponse(String response) { this.response = response; }
     }
 
+    // Endpoint para enviar un mensaje al chatbot y recibir una respuesta
     @Operation(summary = "Send a message to the gym chatbot")
     @PostMapping("/message")
     public ResponseEntity<Object> chat(@RequestBody ChatRequest request) {
