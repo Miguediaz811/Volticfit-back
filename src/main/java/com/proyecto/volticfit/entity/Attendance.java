@@ -12,7 +12,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
-
+/**
+ * Entidad que representa la asistencia de un usuario al gimnasio, incluyendo detalles como la hora de entrada, hora de salida y el tipo de registro (QR o manual).
+ */
 @Entity
 @Data
 @Table(name = "Asistencia")

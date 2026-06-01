@@ -37,4 +37,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
      * Find all active reservations for a user.
      */
     List<Reservation> findByUserIdUserAndState(Long userId, Boolean state);
+
+    /**
+     * Find all active reservations.
+     */
+    List<Reservation> findByState(Boolean state);
 }

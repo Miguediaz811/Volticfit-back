@@ -163,7 +163,7 @@ public class AuthController {
         }
     }
 
-    // --- BLOQUE DE RECUPERACI脫N EDITADO ---
+    // --- BLOQUE DE RECUPERACION EDITADO ---
 
     /**
      * Inicia el proceso de recuperaci贸n enviando un c贸digo/enlace al email

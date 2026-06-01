@@ -1,11 +1,15 @@
 package com.proyecto.volticfit.dto.Auth;
-
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+
+/**
+ * DTO para registrar un nuevo usuario, incluyendo campos como nombres, apellidos, tipo de documento, 
+ * número de documento, correo electrónico, teléfono, contraseña, rol y estado del usuario.
+ */
 @Data
 @RequiredArgsConstructor
 public class RegisterRequestDTO {
