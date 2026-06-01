@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO para responder con los detalles de un registro de asistencia, incluyendo su estado y posibles sanciones.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

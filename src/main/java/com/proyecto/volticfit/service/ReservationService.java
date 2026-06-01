@@ -138,4 +138,18 @@ public class ReservationService {
     public List<Reservation> getUserReservations(Long userId) {
         return reservationRepository.findByUserIdUserAndState(userId, true);
     }
+
+    /**
+     * Returns all active reservations for administrators.
+     *
+     * @param requesterRole the role of the requester
+     * @return list of active reservations
+     */
+    public List<Reservation> getAllActiveReservations(String requesterRole) {
+        if (!"admin".equalsIgnoreCase(requesterRole)) {
+            throw new RuntimeException("No tienes permiso para ver todas las reservas");
+        }
+
+        return reservationRepository.findByState(true);
+    }
 }

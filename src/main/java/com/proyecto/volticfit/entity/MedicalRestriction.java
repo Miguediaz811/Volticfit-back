@@ -13,6 +13,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/**
+ * Entidad que representa una restricción médica, incluyendo detalles como la descripción, tipo, fechas de inicio y fin, estado y su relación con un diagnóstico.
+ */
 @Entity
 @Data
 @Table(name = "RestriccionMedica")

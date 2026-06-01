@@ -1,4 +1,4 @@
-package com.proyecto.volticfit.dto;
+package com.proyecto.volticfit.dto.QrCode;
 
 /**
  * DTO que representa el resultado de la validación de un QR.

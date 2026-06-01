@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 
 import com.proyecto.volticfit.entity.MedicalRestriction;
 
+/**
+ * Repositorio para la entidad MedicalRestriction, que proporciona métodos para realizar operaciones CRUD en la base de datos relacionadas con las restricciones médicas.
+ */
 @Repository
 public interface MedicalRestrictionRepository extends JpaRepository<MedicalRestriction, Long> {
     
