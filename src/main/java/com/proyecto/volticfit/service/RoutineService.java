@@ -279,7 +279,7 @@ public class RoutineService {
             List<ExerciseResponseDTO> exerciseDTOs = new ArrayList<>();
             for (JsonNode exerciseNode : root.path("ejercicios")) {
                 String machineName = exerciseNode.path("maquina").asText();
-                Optional<Machine> machine = machineRepository.findByNameIgnoreCase(machineName);
+                Optional<Machine> machine = machineRepository.findByName(machineName);
 
                 if (machine.isEmpty()) {
                     log.warn("Machine not found: {}, skipping exercise", machineName);
