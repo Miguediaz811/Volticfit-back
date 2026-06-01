@@ -12,7 +12,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
-
+/**
+ * Entidad que representa el historial clínico de un usuario, incluyendo detalles como la descripción del historial, la fecha y la relación con el usuario.
+ */
 @Entity
 @Data
 @Table(name = "HistorialClinico")

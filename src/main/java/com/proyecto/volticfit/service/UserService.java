@@ -16,14 +16,20 @@ import com.proyecto.volticfit.repository.UsersRepository;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Service for managing users.
+ */
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
+    // Repositorio de usuarios para acceder a los datos de los usuarios en la base de datos
     private final UsersRepository usersRepository;
 
+    // Repositorio de roles para acceder a los datos de los roles en la base de datos
     private final RoleRepository roleRepository;
     
+    // Inyectar el codificador de contraseñas para manejar el hashing de las contraseñas de los usuarios
     private final PasswordEncoder passwordEncoder;
 
     public MessageResponseDTO updateUser(Long id, UpdateUserDTO request, String requesterRole, Long requesterId) {

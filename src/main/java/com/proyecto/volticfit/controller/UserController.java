@@ -30,7 +30,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserController {
 
+    // Inyectamos el servicio de User para manejar la lógica de negocio relacionada con los usuarios
     private final UserService userService;
+
+    // Inyectamos el repositorio de Users para acceder a los datos de los usuarios en la base de datos
     private final UsersRepository usersRepository;
 
     /**
