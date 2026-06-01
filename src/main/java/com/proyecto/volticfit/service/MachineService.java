@@ -85,7 +85,7 @@ public class MachineService {
              * Evitar duplicados
              */
             if (machineRepository
-                    .findByName(
+                    .findByNameIgnoreCase(
                             request.getName())
                     .isPresent()) {
 
