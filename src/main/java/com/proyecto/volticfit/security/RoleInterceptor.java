@@ -9,9 +9,15 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+/**
+ * Interceptor para manejar la autorización por roles en las solicitudes HTTP.
+ */
 @Component
 public class RoleInterceptor implements HandlerInterceptor {
 
+    /**
+     * Interceptor para manejar la autorización por roles en las solicitudes HTTP.
+     */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
             Object handler) throws Exception {

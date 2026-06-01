@@ -6,9 +6,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Service;
 
+/**
+ * Service for managing the blacklisted tokens.
+ */
 @Service
 public class TokenBlackListService {
 
+    // Mapa concurrente para almacenar los tokens bloqueados junto con su fecha de expiración, lo que permite un acceso seguro desde múltiples hilos
     private final Map<String, Instant> blacklist = new ConcurrentHashMap<>();
 
     /**

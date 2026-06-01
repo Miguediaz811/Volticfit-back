@@ -7,7 +7,9 @@ import java.lang.annotation.Target;
 
 import com.proyecto.volticfit.enums.RoleEnum;
 
-
+/**
+ * Annotation to specify the required roles for accessing a method.
+ */
 @Target(ElementType.METHOD)
 
 @Retention(RetentionPolicy.RUNTIME)

@@ -8,6 +8,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/**
+ * Entidad que representa una rutina, incluyendo detalles como el objetivo, duración, descripción, grupo muscular y nivel.
+ */
 @Entity
 @Data
 @Table(name = "Rutina")
