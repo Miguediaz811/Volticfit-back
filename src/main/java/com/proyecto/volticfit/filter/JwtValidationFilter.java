@@ -26,8 +26,13 @@ import lombok.extern.log4j.Log4j2;
 @RequiredArgsConstructor
 public class JwtValidationFilter extends OncePerRequestFilter {
 
+    // Servicio de JWT para manejar la generación y validación de tokens
     private final JwtService jwtService;
+
+    // Servicio para manejar la lista negra de tokens revocados
     private final TokenBlackListService blacklistService;
+
+    // Repositorio de usuarios para acceder a los datos de los usuarios en la base de datos
     private final UsersRepository usersRepository;
 
     /**

@@ -8,6 +8,9 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/**
+ * Entidad que representa la relación entre un usuario y una sanción, incluyendo detalles como la fecha de asignación y el estado de la sanción.
+ */
 @Entity
 @Data
 @Table(name = "usuario_sancion")

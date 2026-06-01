@@ -8,15 +8,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+/**
+ * Interceptor para manejar la autenticación JWT en las solicitudes HTTP.
+ */
 @Component
 public class JwtInterceptor implements HandlerInterceptor {
 
+    // Inyectar los servicios necesarios para validar el token y verificar la lista negra
     @Autowired
     private JwtService jwtService;
 
+    // Inyectar el servicio de lista negra para verificar si el token ha sido invalidado
     @Autowired
     private TokenBlackListService tokenBlackListService;
 
+    /**
+     * Interceptor para manejar la autenticación JWT en las solicitudes HTTP.
+     */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 1. Permitir todas las rutas que empiecen por /auth/ (Login, Registro, Recuperar)

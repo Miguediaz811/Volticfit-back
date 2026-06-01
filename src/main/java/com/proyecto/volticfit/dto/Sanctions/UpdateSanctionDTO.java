@@ -1,13 +1,10 @@
 package com.proyecto.volticfit.dto.Sanctions;
+import java.time.LocalDate;
+import lombok.Data;
+
 /**
  * DTO para actualizar una sanción
  */
-
-import java.time.LocalDate;
-
-
-import lombok.Data;
-
 @Data
 public class UpdateSanctionDTO {
     

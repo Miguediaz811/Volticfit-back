@@ -6,9 +6,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.proyecto.volticfit.dto.CompleteExerciseDTO;
 import com.proyecto.volticfit.dto.MessageResponseDTO;
-import com.proyecto.volticfit.dto.RoutineResponseDTO;
+import com.proyecto.volticfit.dto.Exercise.CompleteExerciseDTO;
+import com.proyecto.volticfit.dto.Routine.RoutineResponseDTO;
 import com.proyecto.volticfit.entity.UserRoutine;
 import com.proyecto.volticfit.service.RoutineService;
 
@@ -30,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Routines", description = "AI-generated personalized routine endpoints")
 public class RoutineController {
 
+    // Inyectamos el servicio de Routine para manejar la lógica de negocio relacionada con las rutinas generadas por IA
     private final RoutineService routineService;
 
     @Operation(summary = "Generate a new personalized routine using Gemini AI",

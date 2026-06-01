@@ -10,8 +10,6 @@ import lombok.extern.log4j.Log4j2;
 /**
  * Servicio encargado de la lógica de envío de correos electrónicos.
  * Se comunica con el servidor SMTP configurado para notificar a los usuarios.
- * * @author Mateo
- * @version 1.0
  */
 @Service
 @Log4j2
