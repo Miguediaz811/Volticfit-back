@@ -10,6 +10,9 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/**
+ * Entidad que representa un ejercicio, incluyendo detalles como el nombre, series, repeticiones y descripción.
+ */
 @Entity
 @Data
 @Table(name = "Ejercicios")

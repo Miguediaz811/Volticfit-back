@@ -13,6 +13,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/**
+ * Entidad que representa un código QR, incluyendo detalles como el token, estado de uso y la relación con un usuario.
+ */
 @Entity
 @Data
 @Table(name = "QR")

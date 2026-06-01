@@ -35,4 +35,12 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
      * @return an Optional containing the user if found
      */
     Optional<Users> findByDocNum(String docNum);
+
+
+    /**
+     * Find all active users with a specific role.
+     * @param roleName the name of the role (e.g., "admin", "client")
+     * @return list of active users with the specified role
+     */
+    List<Users> findByRoleNameAndStateTrue(String roleName);
 }

@@ -1,6 +1,7 @@
 package com.proyecto.volticfit.entity;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,26 +13,40 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
+
 /**
- * Entidad que representa el historial clínico de un usuario, incluyendo detalles como la descripción del historial, la fecha y la relación con el usuario.
+ * Entidad de evaluación Física
  */
 @Entity
 @Data
-@Table(name = "HistorialClinico")
-public class ClinicalHistory {
-     
+@Table (name = "EvaluacionFisica")
+public class PhysicalEvaluation {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_historial")
-    private Long idHistory;
- 
-    @Column(name = "descripcion", nullable = false)
-    private String description;
+    @Column(name = "id_evaluacion_fisica")
+    private Long IdEvaluation;
  
     @Column(name = "fecha", nullable = false)
     private LocalDate date;
  
+    @Column(name = "hora_inicio", nullable = false)
+    private LocalTime startTime;
+ 
+    @Column(name = "hora_fin", nullable = false)
+    private LocalTime endTime;
+ 
+    @Column(name = "estado")
+    private String status = "programada"; // programada, cancelada, completada
+ 
+    @Column(name = "notas")
+    private String notes;
+ 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_usuario", nullable = false)
     private Users user;
+ 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_instructor", nullable = false)
+    private Users instructor;
 }

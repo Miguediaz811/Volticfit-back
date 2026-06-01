@@ -6,9 +6,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.proyecto.volticfit.dto.CreateClinicalHistoryDTO;
 import com.proyecto.volticfit.dto.MessageResponseDTO;
-import com.proyecto.volticfit.dto.UpdateClinicalHistoryDTO;
+import com.proyecto.volticfit.dto.ClinicalHistory.CreateClinicalHistoryDTO;
+import com.proyecto.volticfit.dto.ClinicalHistory.UpdateClinicalHistoryDTO;
 import com.proyecto.volticfit.entity.ClinicalHistory;
 import com.proyecto.volticfit.service.ClinicalHistoryService;
 
@@ -31,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Clinical History", description = "Clinical history management endpoints")
 public class ClinicalHistoryController {
 
+    // Inyectamos el servicio de ClinicalHistory para manejar la lógica de negocio relacionada con las historias clínicas
     private final ClinicalHistoryService clinicalHistoryService;
 
     @Operation(summary = "Create a clinical history entry",

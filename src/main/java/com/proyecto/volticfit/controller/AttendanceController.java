@@ -15,7 +15,7 @@ import com.proyecto.volticfit.dto.Attendance.AttendanceRequestDTO;
 import com.proyecto.volticfit.dto.Attendance.AttendanceResponseDTO;
 import com.proyecto.volticfit.dto.Attendance.AttendanceListResponseDTO;
 import com.proyecto.volticfit.dto.Attendance.ManualAttendanceRequestDTO;
-import com.proyecto.volticfit.dto.QrCode.QrResponseDTO;
+import com.proyecto.volticfit.dto.QrCode.QrGeneratedResponseDTO;
 import com.proyecto.volticfit.service.AttendanceService;
 
 import lombok.RequiredArgsConstructor;
@@ -35,7 +35,7 @@ public class AttendanceController {
      * @return QrResponseDTO with base64 image and token
      */
     @GetMapping("/qr")
-    public ResponseEntity<QrResponseDTO> generateQR(
+    public ResponseEntity<QrGeneratedResponseDTO> generateQR(
             @RequestParam Long userId
     ) {
         return ResponseEntity.ok(attendanceService.generateQR(userId));

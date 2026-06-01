@@ -1,11 +1,11 @@
 package com.proyecto.volticfit.dto.Auth;
-
-
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+/**
+ * DTO para cambiar la contraseña de un usuario, incluyendo la contraseña actual y la nueva contraseña.
+ */
 @Data
 public class ChangePasswordRequestDTO {
 
