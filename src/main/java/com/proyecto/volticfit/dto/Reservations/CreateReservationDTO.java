@@ -6,6 +6,9 @@ import java.time.LocalTime;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+/**
+ * DTO para crear una reserva, incluyendo la fecha y la hora de inicio de la reserva.
+ */
 @Data
 public class CreateReservationDTO {
     

@@ -26,8 +26,13 @@ import java.util.function.Function;
 @Log4j2
 public class JwtService {
 
+    // Llave secreta para la firma de los tokens, inyectada desde el archivo de configuración .yaml
     private final String secretKey;
+
+    // Tiempo de expiración para tokens de acceso (requerido por AuthService:[139,34])
     private final Long tokenExpiration;
+
+    // Tiempo de expiración para tokens de recuperación (requerido por AuthService:[139,34])
     private final Long recoveryExpiration;
 
     /**

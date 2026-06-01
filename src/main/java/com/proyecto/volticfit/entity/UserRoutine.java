@@ -12,6 +12,9 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/**
+ * Entidad que representa la relación entre un usuario y una rutina, incluyendo detalles como la fecha de asignación y el estado de la asignación.
+ */
 @Entity
 @Data
 @Table(name = "Usuario_Rutina")
