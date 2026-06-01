@@ -19,9 +19,16 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class PasswordResetService {
 
+    // Repositorio de usuarios para manejar las operaciones relacionadas con los usuarios
     private final UsersRepository usersRepository;
+
+    // Servicio de correo para enviar los códigos de recuperación a los usuarios
     private final PasswordEncoder passwordEncoder;
+
+    // Servicio de correo para enviar los códigos de recuperación a los usuarios
     private final EmailService emailService;
+
+    // Almacena los códigos de verificación temporalmente, con el correo electrónico como clave
     private final Map<String, String> verificationCodes = new ConcurrentHashMap<>();
 
     /**

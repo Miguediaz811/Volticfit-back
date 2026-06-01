@@ -9,6 +9,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.proyecto.volticfit.entity.Attendance;
 
+/**
+ * Repositorio para la entidad Attendance, que proporciona métodos para realizar operaciones CRUD en la base de datos relacionadas con las asistencias de los usuarios.
+ */
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
     /**

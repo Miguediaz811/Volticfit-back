@@ -10,6 +10,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/**
+ * Entidad que representa una máquina de gimnasio, incluyendo detalles como el nombre, tipo, fecha de registro y estado.
+ */
 @Entity
 @Data
 @Table(name = "Maquina")

@@ -21,7 +21,7 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import com.proyecto.volticfit.dto.Attendance.AttendanceListResponseDTO;
 import com.proyecto.volticfit.dto.Attendance.AttendanceResponseDTO;
 import com.proyecto.volticfit.dto.Attendance.ManualAttendanceRequestDTO;
-import com.proyecto.volticfit.dto.QrCode.QrResponseDTO;
+import com.proyecto.volticfit.dto.QrCode.QrGeneratedResponseDTO;
 import com.proyecto.volticfit.entity.Attendance;
 import com.proyecto.volticfit.entity.QrCode;
 import com.proyecto.volticfit.entity.Sanction;
@@ -44,12 +44,22 @@ import lombok.extern.log4j.Log4j2;
 @RequiredArgsConstructor
 public class AttendanceService {
 
+    // QR code image size
     private static final int QR_SIZE = 300;
 
+    // Repository for users to manage user data and lookups
     private final UsersRepository usersRepository;
+
+    // Repository for QR codes to manage generation and validation
     private final QrCodeRepository qrCodeRepository;
+
+    // Repository for attendance records to manage entry and exit times
     private final AttendanceRepository attendanceRepository;
+
+    // Repository for user sanctions to check active sanctions during attendance registration
     private final UserSanctionRepository userSanctionRepository;
+
+    // JWT service for validating tokens in attendance history retrieval
     private final JwtService jwtService;
 
     /**
@@ -60,7 +70,7 @@ public class AttendanceService {
      * @return QrResponseDTO with base64 image and token
      */
     @Transactional
-    public QrResponseDTO generateQR(Long userId) {
+    public QrGeneratedResponseDTO generateQR(Long userId) {
         Users user = usersRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("No se encontro el usuario"));
 
@@ -256,14 +266,14 @@ public class AttendanceService {
         return response;
     }
 
-    private QrResponseDTO buildQRResponse(String token) {
+    private QrGeneratedResponseDTO buildQRResponse(String token) {
         try {
             QRCodeWriter qrCodeWriter = new QRCodeWriter();
             BitMatrix bitMatrix = qrCodeWriter.encode(token, BarcodeFormat.QR_CODE, QR_SIZE, QR_SIZE);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             MatrixToImageWriter.writeToStream(bitMatrix, "PNG", outputStream);
             String base64 = Base64.getEncoder().encodeToString(outputStream.toByteArray());
-            return new QrResponseDTO("data:image/png;base64," + base64, token);
+            return new QrGeneratedResponseDTO("data:image/png;base64," + base64, token);
         } catch (Exception e) {
             log.error("Error generating QR image: {}", e.getMessage());
             throw new RuntimeException("No se pudo generar el codigo QR");

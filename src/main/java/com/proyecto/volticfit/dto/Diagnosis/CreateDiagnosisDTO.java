@@ -1,11 +1,13 @@
-package com.proyecto.volticfit.dto;
+package com.proyecto.volticfit.dto.Diagnosis;
 
 import java.time.LocalDate;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
-
+/**
+ * DTO para crear un diagnóstico, incluyendo detalles como el porcentaje de grasa, masa muscular, altura, peso, género y edad del usuario.
+ */
 @Data
 public class CreateDiagnosisDTO {
      

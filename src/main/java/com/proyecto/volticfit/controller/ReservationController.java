@@ -130,4 +130,26 @@ public class ReservationController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
+
+    @Operation(summary = "Get all active reservations - ADMIN only",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Reservations retrieved successfully"),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+        }
+    )
+    @GetMapping("/all")
+    public ResponseEntity<Object> getAllReservations(HttpServletRequest httpRequest) {
+        try {
+            String role = (String) httpRequest.getAttribute("role");
+            return ResponseEntity.ok(reservationService.getAllActiveReservations(role));
+        } catch (RuntimeException e) {
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        } catch (Exception e) {
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
 }

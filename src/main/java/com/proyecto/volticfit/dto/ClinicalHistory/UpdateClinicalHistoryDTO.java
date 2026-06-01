@@ -1,4 +1,4 @@
-package com.proyecto.volticfit.dto;
+package com.proyecto.volticfit.dto.ClinicalHistory;
  
 import java.time.LocalDate;
  
