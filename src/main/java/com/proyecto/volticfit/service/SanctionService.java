@@ -28,7 +28,7 @@ import lombok.extern.log4j.Log4j2;
 public class SanctionService {
     
     /**
-     * Repositorio de sanciones para acceder a los datos de las sanciones en la base de datos
+     *  Repositorio de sanciones para acceder a los datos de las sanciones en la base de datos
      */
     private final SanctionRepository sanctionRepository;
 
@@ -42,8 +42,45 @@ public class SanctionService {
      */
     private final UsersRepository usersRepository;
 
-@Transactional
-    public Sanction create(CreateSanctionDTO request) {
+    /**
+     * Obtiene todas las sanciones
+     * @return Lista de sanciones
+     */
+    public List<Sanction> getAll() {
+        return sanctionRepository.findAll();
+    }
+
+    /**
+     * Obtiene una sanción por su ID
+     * @param id ID de la sanción a obtener
+     * @return la saación si se encuenta, de lo contrario lanza una excepción
+     */
+    public Sanction getById(Long id) {
+        return sanctionRepository.findById(id).orElseThrow(() -> new RuntimeException("Sanción no encontrada"));
+    }
+
+    /**
+     * Obtiene las sanciones de un usuario por su ID
+     * @param userId ID del usuario
+     * @return lista de sanciones del usuario
+     */
+    public List<Sanction> getByUser(Long userId) {
+        if (userId == null) {
+            throw new RuntimeException("No se pudo identificar el usuario");
+        }
+        List<Sanction> sanctions = userSanctionRepository.findByUserIdUser(userId)
+                .stream()
+                .map(us -> us.getSanction())
+                .toList();
+ 
+        if (sanctions.isEmpty()) {
+            return List.of();
+        }
+        return sanctions;
+    }
+
+    @Transactional
+    public MessageResponseDTO create(CreateSanctionDTO request) {
         Users user = usersRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("No se encontro el usuario"));
 
@@ -52,33 +89,32 @@ public class SanctionService {
         sanction.setType(request.getType());
         sanction.setStartDate(request.getStartDate());
         sanction.setEndDate(request.getEndDate());
-        sanction.setState(true);
+        sanction.setState(true);  
+        sanctionRepository.save(sanction);
 
-        Sanction savedSanction = sanctionRepository.save(sanction);
-
-        // CORRECCIÓN: Instanciar y asignar propiedades mediante setters para evitar el error de constructor indefinido
         UserSanctionId userSanctionId = new UserSanctionId();
         userSanctionId.setUserId(user.getIdUser());
-        userSanctionId.setSanctionId(savedSanction.getIdSanction());
+        userSanctionId.setSanctionId(sanction.getIdSanction());
 
         UserSanction userSanction = new UserSanction();
         userSanction.setId(userSanctionId);
         userSanction.setUser(user);
-        userSanction.setSanction(savedSanction);
-
+        userSanction.setSanction(sanction);
         userSanctionRepository.save(userSanction);
 
-        log.info("Sanction created and mapped to user: {}", user.getIdUser());
+        log.info("Sanction created and assigned to user: {}", user.getIdUser());
 
-        return savedSanction;
-    }
-
-    public List<Sanction> getAll() {
-        return sanctionRepository.findAll();
+        MessageResponseDTO response = new MessageResponseDTO();
+        response.setMessage("Sancion registrada correctamente");
+        return response;
     }
 
     /**
-     * HU42: Implementar actualizarSancion() y Manejar errores de conexión en edición
+     * Updates an existing sanction.
+     *
+     * @param id      the sanction ID
+     * @param request the data to update
+     * @return success message
      */
     @Transactional
     public MessageResponseDTO update(Long id, UpdateSanctionDTO request) {
@@ -90,12 +126,7 @@ public class SanctionService {
         if (request.getStartDate() != null) sanction.setStartDate(request.getStartDate());
         if (request.getEndDate() != null) sanction.setEndDate(request.getEndDate());
 
-        try {
-            sanctionRepository.save(sanction);
-        } catch (Exception e) {
-            log.error("Falla de red o caída de base de datos durante la edición de la sanción {}: {}", id, e.getMessage());
-            throw new IllegalStateException("Error de comunicación con el motor de base de datos al guardar los cambios.", e);
-        }
+        sanctionRepository.save(sanction);
 
         log.info("Sanction updated: {}", id);
 
@@ -105,23 +136,23 @@ public class SanctionService {
     }
 
     /**
-     * HU43: Implementar eliminarSancion() e Implementar manejo de errores de eliminación
+     * Deactivates a sanction (logical delete).
+     *
+     * @param id the sanction ID
+     * @return success message
      */
     @Transactional
     public MessageResponseDTO delete(Long id) {
         Sanction sanction = sanctionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("No se encontro la sancion"));
 
-        try {
-            sanctionRepository.delete(sanction);
-            log.info("Sanction physically deleted from the database: {}", id);
-        } catch (Exception e) {
-            log.error("Error crítico de eliminación física para sanción con ID {}: {}", id, e.getMessage());
-            throw new IllegalStateException("No se pudo eliminar el registro debido a restricciones de integridad relacional en el sistema.", e);
-        }
+        sanction.setState(false);
+        sanctionRepository.save(sanction);
+
+        log.info("Sanction deactivated: {}", id);
 
         MessageResponseDTO response = new MessageResponseDTO();
-        response.setMessage("Sancion eliminada correctamente");
+        response.setMessage("Sancion inactivada correctamente");
         return response;
     }
 }
