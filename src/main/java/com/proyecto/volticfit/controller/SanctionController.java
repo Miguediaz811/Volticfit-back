@@ -25,107 +25,39 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import jakarta.servlet.http.HttpServletRequest;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/sanctions")
+@RequestMapping("/api/sanciones")
 @RequiredArgsConstructor
+@Tag(name = "Sanctions", description = "Sanction management endpoints")
 public class SanctionController {
 
-    /**
-     * servicio de sanciones
-     */
     private final SanctionService sanctionService;
 
-
-    @Operation(summary = "List sanctions - ADMIN sees all, user sees only their own",
-            responses = {
-                @ApiResponse(responseCode = "200", description = "Sanctions retrieved successfully",
-                        content = @Content(schema = @Schema(implementation = Sanction.class))),
-                @ApiResponse(responseCode = "400", description = "Error retrieving sanctions",
-                        content = @Content(schema = @Schema(implementation = MessageResponseDTO.class)))
-            })
-    @GetMapping
-    public ResponseEntity<Object> getSanctions(HttpServletRequest request) {
-        try {
-            String role = (String) request.getAttribute("role");
-            Long userId = (Long) request.getAttribute("userId");
- 
-            List<Sanction> sanctions;
- 
-            if (RoleEnum.ADMIN.getValue().equalsIgnoreCase(role)) {
-                sanctions = sanctionService.getAll();
-            } else {
-                sanctions = sanctionService.getByUser(userId);
-            }
- 
-            if (sanctions.isEmpty()) {
-                MessageResponseDTO response = new MessageResponseDTO();
-                response.setMessage("No sanctions found");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-            }
- 
-            return ResponseEntity.ok(sanctions);
-        } catch (Exception e) {
-            MessageResponseDTO error = new MessageResponseDTO();
-            error.setMessage(e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-        }
-    }
- 
-    @Operation(summary = "Get sanction by ID - ADMIN only",
-            responses = {
-                @ApiResponse(responseCode = "200", description = "Sanction retrieved successfully",
-                        content = @Content(schema = @Schema(implementation = Sanction.class))),
-                @ApiResponse(responseCode = "400", description = "Sanction not found",
-                        content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
-                @ApiResponse(responseCode = "403", description = "Access denied",
-                        content = @Content(schema = @Schema(implementation = MessageResponseDTO.class)))
-            })
-    @GetMapping("/{id}")
-    @RequiresRole(RoleEnum.ADMIN)
-    public ResponseEntity<Object> getSanctionById(@PathVariable Long id) {
-        try {
-            Sanction sanction = sanctionService.getById(id);
-            return ResponseEntity.ok(sanction);
-        } catch (RuntimeException e) {
-            MessageResponseDTO error = new MessageResponseDTO();
-            error.setMessage(e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-        }
-    }
-
-    @Operation(summary = "Create a sanction and assign it to a user - ADMIN only",
-        responses = {
-            @ApiResponse(responseCode = "201", description = "Sanction created successfully",
-                content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Error creating sanction"),
-            @ApiResponse(responseCode = "403", description = "Access denied")
-        }
-    )
     @PostMapping
     @RequiresRole(RoleEnum.ADMIN)
-    public ResponseEntity<MessageResponseDTO> createSanction(@Valid @RequestBody CreateSanctionDTO request) {
-        try {
-            MessageResponseDTO response = sanctionService.create(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (Exception e) {
-            MessageResponseDTO error = new MessageResponseDTO();
-            error.setMessage(e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-        }
+    public ResponseEntity<Sanction> createSanction(@RequestBody CreateSanctionDTO request) {
+        return ResponseEntity.ok(sanctionService.create(request));
     }
 
-    @Operation(summary = "Update a sanction - ADMIN only",
-        responses = {
-            @ApiResponse(responseCode = "200", description = "Sanction updated successfully",
-                content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
+    @GetMapping
+    @RequiresRole(RoleEnum.ADMIN)
+    public ResponseEntity<List<Sanction>> getAllSanctions() {
+        return ResponseEntity.ok(sanctionService.getAll());
+    }
+
+    /**
+     * HU42: Crear endpoint PUT /api/sanciones/{id} e Implementar
+     * actualizarSancion()
+     */
+    @Operation(summary = "Update a sanction - ADMIN only", responses = {
+            @ApiResponse(responseCode = "200", description = "Sanction updated successfully", content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
             @ApiResponse(responseCode = "404", description = "Sanction not found"),
-            @ApiResponse(responseCode = "403", description = "Access denied")
-        }
-    )
+            @ApiResponse(responseCode = "500", description = "Connection error during update")
+    })
     @PutMapping("/{id}")
     @RequiresRole(RoleEnum.ADMIN)
     public ResponseEntity<MessageResponseDTO> updateSanction(
@@ -134,6 +66,10 @@ public class SanctionController {
         try {
             MessageResponseDTO response = sanctionService.update(id, request);
             return ResponseEntity.ok(response);
+        } catch (IllegalStateException e) {
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage("Error de conexión al intentar editar la sanción: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         } catch (RuntimeException e) {
             MessageResponseDTO error = new MessageResponseDTO();
             error.setMessage(e.getMessage());
@@ -141,12 +77,16 @@ public class SanctionController {
         }
     }
 
-    @Operation(summary = "Deactivate a sanction - ADMIN only",
+    /**
+     * HU43: Crear endpoint DELETE /api/sanciones/{id} e Implementar
+     * eliminarSancion()
+     */
+    @Operation(summary = "Delete a sanction physically - ADMIN only",
         responses = {
-            @ApiResponse(responseCode = "200", description = "Sanction deactivated successfully",
+            @ApiResponse(responseCode = "200", description = "Sanction deleted successfully",
                 content = @Content(schema = @Schema(implementation = MessageResponseDTO.class))),
             @ApiResponse(responseCode = "404", description = "Sanction not found"),
-            @ApiResponse(responseCode = "403", description = "Access denied")
+            @ApiResponse(responseCode = "500", description = "Database failure or constraint error")
         }
     )
     @DeleteMapping("/{id}")
@@ -155,6 +95,10 @@ public class SanctionController {
         try {
             MessageResponseDTO response = sanctionService.delete(id);
             return ResponseEntity.ok(response);
+        } catch (IllegalStateException e) {
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage("Error de eliminación: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         } catch (RuntimeException e) {
             MessageResponseDTO error = new MessageResponseDTO();
             error.setMessage(e.getMessage());

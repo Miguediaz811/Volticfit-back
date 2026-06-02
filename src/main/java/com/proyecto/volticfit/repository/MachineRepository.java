@@ -12,6 +12,7 @@ import java.util.Optional;
 @Repository
 public interface MachineRepository extends JpaRepository<Machine, Long> {
 
+
     /**
      * Filters the machine inventory by its structural type and current operational state.
      *
@@ -20,12 +21,16 @@ public interface MachineRepository extends JpaRepository<Machine, Long> {
      * @return a list of machines matching both criteria
      */
     List<Machine> findByTypeAndState(String type, Boolean state);
+     /**
+      * Encuentra una máquina por su nombre, ignorando mayúsculas y minúsculas.
+      * @param name Nombre de la máquina a buscar
+      * @return Optional que contiene la máquina si se encuentra, o vacío si no se encuentra
+      */
+        Optional<Machine> findByNameIgnoreCase(String name);
+        
+     /**
+      * HU38: Recupera todas las máquinas que se encuentran activas lógicamente.
+      */
+        List<Machine> findByStateTrue();
 
-    /**
-     * Retrieves a machine by its exact name, ignoring case sensitivity.
-     *
-     * @param name the name of the machine to search for
-     * @return an Optional containing the found machine, or empty if no match exists
-     */
-    Optional<Machine> findByNameIgnoreCase(String name);
 }
