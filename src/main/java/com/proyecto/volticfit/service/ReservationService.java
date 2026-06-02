@@ -3,7 +3,6 @@ package com.proyecto.volticfit.service;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -39,6 +38,7 @@ public class ReservationService {
     );
  
     private final ReservationRepository reservationRepository;
+    
     private final UsersRepository usersRepository;
  
     /**
