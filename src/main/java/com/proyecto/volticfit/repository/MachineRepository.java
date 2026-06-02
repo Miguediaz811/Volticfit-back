@@ -1,22 +1,31 @@
 package com.proyecto.volticfit.repository;
 
-import java.util.Optional;
-
+import com.proyecto.volticfit.entity.Machine;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import com.proyecto.volticfit.entity.Machine;
+import java.util.List;
+import java.util.Optional;
 
 /**
- * Repositorio para la entidad Machine, que proporciona métodos para realizar operaciones CRUD en la base de datos relacionadas con las máquinas.
+ * Repository interface for managing data operations and queries for {@link Machine} entities.
  */
 @Repository
 public interface MachineRepository extends JpaRepository<Machine, Long> {
-     /**
-      * Encuentra una máquina por su nombre, ignorando mayúsculas y minúsculas.
-      * @param name Nombre de la máquina a buscar
-      * @return Optional que contiene la máquina si se encuentra, o vacío si no se encuentra
-      */
-        Optional<Machine> findByNameIgnoreCase(String name);
-    
+
+    /**
+     * Filters the machine inventory by its structural type and current operational state.
+     *
+     * @param type  the category of the machine (e.g., "Cardio", "Musculación")
+     * @param state the operational status flag (true for active, false for maintenance)
+     * @return a list of machines matching both criteria
+     */
+    List<Machine> findByTypeAndState(String type, Boolean state);
+
+    /**
+     * Retrieves a machine by its exact name, ignoring case sensitivity.
+     *
+     * @param name the name of the machine to search for
+     * @return an Optional containing the found machine, or empty if no match exists
+     */
+    Optional<Machine> findByNameIgnoreCase(String name);
 }
