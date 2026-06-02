@@ -5,6 +5,9 @@ import lombok.Data;
 /**
  * DTO utilizado para responder
  * operaciones relacionadas con máquinas.
+ *
+ * @author Miguel
+ * @version 1.0
  */
 @Data
 public class MachineResponseDTO {
