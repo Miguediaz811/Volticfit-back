@@ -9,8 +9,8 @@ import com.proyecto.volticfit.entity.Reservation;
 public interface GymReservationRepository
         extends JpaRepository<Reservation, Long> {
 
-    boolean existsByReservationDateAndState(
-            LocalDate reservationDate,
-            Boolean state
-    );
+    boolean existsByDateAndState(
+        LocalDate date,
+        Boolean state
+        );
 }

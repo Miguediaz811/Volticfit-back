@@ -2,14 +2,17 @@ package com.proyecto.volticfit.controller;
 
 import java.util.List;
 
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.proyecto.volticfit.dto.MachineMaintenance.CreateMaintenanceDTO;
 import com.proyecto.volticfit.dto.MachineMaintenance.MaintenanceResponseDTO;
 import com.proyecto.volticfit.entity.MachineMaintenance;
-import com.proyecto.volticfit.entity.MachineMaintenance;
 import com.proyecto.volticfit.service.MachineMaintenanceService;
-
 
 import lombok.RequiredArgsConstructor;
 
@@ -41,13 +44,13 @@ public class MachineMaintenanceController {
     /**
      * Consulta historial por máquina.
      */
-    @GetMapping("/machine/{machineId}")
+    @GetMapping("/machine/{idMachine}")
     public List<MachineMaintenance>
     getMachineHistory(
-            @PathVariable Long machineId) {
+            @PathVariable Long idMachine) {
 
         return maintenanceService
                 .getMachineMaintenanceHistory(
-                        machineId);
+                        idMachine);
     }
 }
