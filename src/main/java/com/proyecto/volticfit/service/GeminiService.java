@@ -17,18 +17,22 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
- * Service for interacting with Google Gemini Flash API.
- * Used for routine generation and chatbot functionality.
+ * Service for interacting with Google Gemini API models.
+ * Uses 2.5-flash-lite for chatbot interactions and 3.1-flash for complex routine generations.
  */
 @Service
 @Log4j2
 public class GeminiService {
 
-  // URL base de la API de Gemini Flash, con un placeholder para la clave de API
-    private static final String GEMINI_URL =
+    // Para el Chatbot (Dejamos el 2.5 lite que es súper rápido si te lo acepta, o si da problemas usa 1.5-flash)
+    private static final String CHAT_URL =
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=";
+
+    // Para las Rutinas (Cambiamos al 1.5-flash o 2.0-flash que no fallan con 404 y son unos tanques procesando JSON)
+    private static final String ROUTINE_URL =
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=";
 
-    // Lista de máquinas disponibles en el gimnasio, que se incluirá en los prompts para la generación de rutinas
+    // Lista de máquinas disponibles en el gimnasio
     private static final String AVAILABLE_MACHINES =
             "- Cinta de correr\n" +
             "- Bicicleta estática\n" +
@@ -43,20 +47,18 @@ public class GeminiService {
     @Value("${gemini.api.key}")
     private String apiKey;
 
-private final OkHttpClient httpClient = new OkHttpClient.Builder()
-        .connectTimeout(60, TimeUnit.SECONDS) // Tiempo para conectar
-        .writeTimeout(60, TimeUnit.SECONDS)   // Tiempo para enviar datos
-        .readTimeout(60, TimeUnit.SECONDS)    // Tiempo para esperar respuesta (¡Este es el clave!)
-        .build();
+    private final OkHttpClient httpClient = new OkHttpClient.Builder()
+            .connectTimeout(120, TimeUnit.SECONDS)
+            .writeTimeout(120, TimeUnit.SECONDS)
+            .readTimeout(120, TimeUnit.SECONDS) // 2 minutos completos
+            .build();
+            
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
-     * Sends a prompt to Gemini and returns the text response.
-     *
-     * @param prompt the prompt to send
-     * @return the text response from Gemini
+     * Núcleo compartido para ejecutar las peticiones HTTP hacia la API de Gemini.
      */
-    public String generate(String prompt) {
+    private String executeApiCall(String targetUrl, String prompt) {
         String requestBody = """
                 {
                   "contents": [
@@ -73,13 +75,13 @@ private final OkHttpClient httpClient = new OkHttpClient.Builder()
                 requestBody, MediaType.parse("application/json"));
 
         Request request = new Request.Builder()
-                .url(GEMINI_URL + apiKey)
+                .url(targetUrl + apiKey)
                 .post(body)
                 .build();
 
         try (Response response = httpClient.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                log.error("Gemini API error: {}", response.code());
+                log.error("Gemini API error ({}): {}", targetUrl, response.code());
                 throw new RuntimeException("Error calling Gemini API: " + response.code());
             }
 
@@ -90,16 +92,20 @@ private final OkHttpClient httpClient = new OkHttpClient.Builder()
                     .path("text").asText();
 
         } catch (IOException e) {
-            log.error("Error calling Gemini: {}", e.getMessage());
-            throw new RuntimeException("Error calling Gemini API");
+            log.error("Error calling Gemini endpoint: {}", e.getMessage());
+            throw new RuntimeException("Error calling Gemini API", e);
         }
     }
 
     /**
-     * Generates a personalized workout routine based on user data.
-     *
-     * @param userContext the user's health and fitness data
-     * @return JSON string with the routine
+     * Método genérico de compatibilidad (apunta por defecto al modelo de rutinas)
+     */
+    public String generate(String prompt) {
+        return executeApiCall(ROUTINE_URL, prompt);
+    }
+
+    /**
+     * Generates a personalized workout routine based on user data using Gemini 3.1 Flash.
      */
     public String generateRoutine(String userContext) {
         String prompt = String.format("""
@@ -131,13 +137,11 @@ private final OkHttpClient httpClient = new OkHttpClient.Builder()
                 }
                 """, userContext, AVAILABLE_MACHINES);
 
-        return generate(prompt);
+        return executeApiCall(ROUTINE_URL, prompt);
     }
 
     /**
-     * Generates a generic routine when user has no diagnosis.
-     *
-     * @return JSON string with a generic routine
+     * Generates a generic routine when user has no diagnosis using Gemini 3.1 Flash.
      */
     public String generateGenericRoutine() {
         String prompt = String.format("""
@@ -166,14 +170,11 @@ private final OkHttpClient httpClient = new OkHttpClient.Builder()
                 }
                 """, AVAILABLE_MACHINES);
 
-        return generate(prompt);
+        return executeApiCall(ROUTINE_URL, prompt);
     }
 
     /**
-     * Handles a chatbot message about the gym.
-     *
-     * @param userMessage the user's message
-     * @return the chatbot response
+     * Handles a chatbot message about the gym using Gemini 2.5 Flash Lite.
      */
     public String chat(String userMessage) {
         String prompt = String.format("""
@@ -185,6 +186,6 @@ private final OkHttpClient httpClient = new OkHttpClient.Builder()
                 User message: %s
                 """, userMessage);
 
-        return generate(prompt);
+        return executeApiCall(CHAT_URL, prompt);
     }
 }
