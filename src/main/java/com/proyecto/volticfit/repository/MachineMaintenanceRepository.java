@@ -9,16 +9,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.proyecto.volticfit.entity.MachineMaintenance;
 
-public interface MachineMaintenanceRepository
-        extends JpaRepository<MachineMaintenance, Long> {
+public interface MachineMaintenanceRepository extends JpaRepository<MachineMaintenance, Long> {
 
     Optional<MachineMaintenance>
-    findByMachineIdAndMaintenanceDateAndMaintenanceTime(
-            Long machineId,
-            LocalDate maintenanceDate,
-            LocalTime maintenanceTime
+    findByMachine_IdMachineAndDateAndTime(
+            Long idMachine,
+            LocalDate date,
+            LocalTime time
     );
 
     List<MachineMaintenance>
-    findByMachineId(Long machineId);
+    findByMachine_IdMachine(Long idMachine);
 }

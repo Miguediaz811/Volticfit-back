@@ -81,7 +81,7 @@ public class MachineMaintenanceService {
 
             boolean exists =
                     maintenanceRepository
-                            .findByMachineIdAndMaintenanceDateAndMaintenanceTime(
+                            .findByMachine_IdMachineAndDateAndTime(
                                     request.getMachineId(),
                                     request.getDate(),
                                     request.getTime())
@@ -137,14 +137,14 @@ public class MachineMaintenanceService {
      * Obtiene el historial de mantenimientos
      * de una máquina.
      *
-     * @param machineId identificador de máquina
+     * @param idMachine identificador de máquina
      * @return historial encontrado
      */
     public List<MachineMaintenance>
     getMachineMaintenanceHistory(
-            Long machineId) {
+            Long idMachine) {
 
         return maintenanceRepository
-                .findByMachineId(machineId);
+                .findByMachine_IdMachine(idMachine);
     }
 }
