@@ -1,5 +1,6 @@
 package com.proyecto.volticfit.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,5 +19,9 @@ public interface MachineRepository extends JpaRepository<Machine, Long> {
       * @return Optional que contiene la máquina si se encuentra, o vacío si no se encuentra
       */
         Optional<Machine> findByNameIgnoreCase(String name);
-    
+        
+     /**
+      * HU38: Recupera todas las máquinas que se encuentran activas lógicamente.
+      */
+        List<Machine> findByStateTrue();
 }
