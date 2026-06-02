@@ -163,7 +163,7 @@ public class ExportService {
             header.createCell(2).setCellValue("Type");
             header.createCell(3).setCellValue("Status");
             
-            List<Machine> list = machineRepository.findByStateTrue();
+            List<Machine> list = machineRepository.findByStateTrue  ();
             int idx = 1;
             for (Machine m : list) {
                 Row row = sheet.createRow(idx++);

@@ -3,12 +3,10 @@ package com.proyecto.volticfit.service;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.proyecto.volticfit.dto.MessageResponseDTO;
-import com.proyecto.volticfit.dto.Reservations.CreateFullGymReservationDTO;
 import com.proyecto.volticfit.dto.Reservations.CreateReservationDTO;
 import com.proyecto.volticfit.dto.Reservations.ShiftResponseDTO;
 import com.proyecto.volticfit.entity.Reservation;
@@ -104,92 +102,6 @@ public class ReservationService {
         MessageResponseDTO response = new MessageResponseDTO();
         response.setMessage("Reserva creada correctamente");
         return response;
-    }
-
-    @Transactional
-    public MessageResponseDTO createFullGymReservation(
-        CreateFullGymReservationDTO request,
-        Long userId) {
-
-    MessageResponseDTO response =
-            new MessageResponseDTO();
-
-    try {
-
-        Users user = usersRepository.findById(userId)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "User not found"));
-
-        /*
-         * Solo funcionarios.
-         */
-        if (!"FUNCIONARIO".equalsIgnoreCase(
-                user.getRole().getName())) {
-
-            response.setMessage(
-                    "Only staff members can reserve the entire gym");
-
-            return response;
-        }
-
-        /*
-         * Validar si ya existe una reserva completa.
-         */
-        boolean exists =
-                reservationRepository
-                        .existsByDateAndReservationTypeAndState(
-                                request.getReservationDate(),
-                                "FULL_GYM",
-                                true);
-
-        if (exists) {
-
-            response.setMessage(
-                    "The gym is already reserved");
-
-            return response;
-        }
-
-        Reservation reservation =
-                new Reservation();
-
-        reservation.setUser(user);
-        reservation.setDate(
-                request.getReservationDate());
-
-        reservation.setStartTime(
-                request.getStartTime());
-
-        reservation.setEndTime(
-                request.getEndTime());
-
-        reservation.setState(true);
-
-        reservation.setReservationType(
-                "FULL_GYM");
-
-        reservationRepository.save(
-                reservation);
-
-        response.setMessage(
-                "Gym reserved successfully");
-
-        log.info(
-                "Full gym reserved by user {}",
-                userId);
-
-    } catch (Exception e) {
-
-        log.error(
-                "Error creating gym reservation: {}",
-                e.getMessage());
-
-        response.setMessage(
-                "Error creating reservation");
-    }
-
-    return response;
     }
  
     /**
