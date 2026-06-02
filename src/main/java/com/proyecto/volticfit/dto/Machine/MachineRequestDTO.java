@@ -5,6 +5,9 @@ import lombok.Data;
 /**
  * DTO utilizado para registrar
  * nuevas máquinas.
+ *
+ * @author Miguel Angel Nieto 
+ * @version 1.0
  */
 @Data
 public class MachineRequestDTO {
