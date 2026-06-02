@@ -43,4 +43,7 @@ public class Reservation {
     @JoinColumn(name = "id_usuario", nullable = false)
     private Users user;
 
+    @Column(name = "tipo_reserva")
+    private String reservationType;
+
 }
