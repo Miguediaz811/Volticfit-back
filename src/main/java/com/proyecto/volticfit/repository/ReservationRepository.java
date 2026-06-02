@@ -42,4 +42,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
      * Find all active reservations.
      */
     List<Reservation> findByState(Boolean state);
+
+    boolean existsByDateAndReservationTypeAndState(
+        LocalDate date,
+        String reservationType,
+        Boolean state
+);
 }
