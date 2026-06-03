@@ -8,6 +8,7 @@ import com.proyecto.volticfit.dto.MessageResponseDTO;
 import com.proyecto.volticfit.dto.RescheduleEvaluationDTO;
 import com.proyecto.volticfit.entity.PhysicalEvaluation;
 import com.proyecto.volticfit.entity.Users;
+import com.proyecto.volticfit.enums.RoleEnum;
 import com.proyecto.volticfit.repository.PhysicalEvaluationRepository;
 import com.proyecto.volticfit.repository.UsersRepository;
 
@@ -51,7 +52,7 @@ public class PhysicalEvaluationService {
      * @return list of instructor availability per shift
      */
     public List<InstructorAvailabilityDTO> getInstructorAvailability(LocalDate date) {
-        List<Users> instructors = usersRepository.findByRoleNameAndStateTrue("admin");
+        List<Users> instructors = usersRepository.findByRoleNameAndStateTrue(RoleEnum.ADMIN.getValue());
         List<InstructorAvailabilityDTO> availability = new ArrayList<>();
  
         for (Users instructor : instructors) {
@@ -91,8 +92,7 @@ public class PhysicalEvaluationService {
         Users instructor = usersRepository.findById(request.getInstructorId())
                 .orElseThrow(() -> new RuntimeException("Instructor not found"));
  
-        // Validate instructor is admin
-        if (!"admin".equalsIgnoreCase(instructor.getRole().getName())) {
+        if (!RoleEnum.ADMIN.getValue().equalsIgnoreCase(instructor.getRole().getName())) {
             throw new RuntimeException("The selected user is not an instructor");
         }
  
@@ -169,6 +169,10 @@ public class PhysicalEvaluationService {
  
         Users instructor = usersRepository.findById(request.getInstructorId())
                 .orElseThrow(() -> new RuntimeException("Instructor not found"));
+
+        if (!RoleEnum.ADMIN.getValue().equalsIgnoreCase(instructor.getRole().getName())) {
+            throw new RuntimeException("The selected user is not an instructor");
+        }
  
         boolean taken = evaluationRepository
                 .existsByInstructorIdUserAndDateAndStartTimeAndStatusNot(
@@ -222,4 +226,5 @@ public class PhysicalEvaluationService {
         response.setMessage("Physical evaluation cancelled successfully");
         return response;
     }
+
 }

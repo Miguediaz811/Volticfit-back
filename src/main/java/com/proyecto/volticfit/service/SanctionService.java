@@ -11,6 +11,7 @@ import com.proyecto.volticfit.entity.Sanction;
 import com.proyecto.volticfit.entity.UserSanction;
 import com.proyecto.volticfit.entity.UserSanctionId;
 import com.proyecto.volticfit.entity.Users;
+import com.proyecto.volticfit.enums.RoleEnum;
 import com.proyecto.volticfit.repository.SanctionRepository;
 import com.proyecto.volticfit.repository.UserSanctionRepository;
 import com.proyecto.volticfit.repository.UsersRepository;
@@ -84,6 +85,10 @@ public class SanctionService {
         Users user = usersRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("No se encontro el usuario"));
 
+        if (isAdmin(user)) {
+            throw new RuntimeException("No se puede sancionar a un administrador");
+        }
+
         Sanction sanction = new Sanction();
         sanction.setDescription(request.getDescription());
         sanction.setType(request.getType());
@@ -154,5 +159,11 @@ public class SanctionService {
         MessageResponseDTO response = new MessageResponseDTO();
         response.setMessage("Sancion inactivada correctamente");
         return response;
+    }
+
+    private boolean isAdmin(Users user) {
+        return user.getRole() != null
+                && user.getRole().getName() != null
+                && RoleEnum.ADMIN.getValue().equalsIgnoreCase(user.getRole().getName());
     }
 }

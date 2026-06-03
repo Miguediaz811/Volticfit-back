@@ -2,7 +2,9 @@ package com.proyecto.volticfit.repository;
 
 import com.proyecto.volticfit.entity.Machine;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,5 +35,10 @@ public interface MachineRepository extends JpaRepository<Machine, Long> {
       * HU38: Recupera todas las máquinas que se encuentran activas lógicamente.
       */
     List<Machine> findByStateTrue();
+
+    long countByStateTrue();
+
+    @Query("select min(m.registrationDate) from Machine m where m.registrationDate is not null")
+    LocalDate findFirstRegistrationDate();
 
 }

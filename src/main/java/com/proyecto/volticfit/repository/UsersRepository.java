@@ -43,4 +43,6 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
      * @return list of active users with the specified role
      */
     List<Users> findByRoleNameAndStateTrue(String roleName);
+
+    long countByStateTrueAndRoleNameNotIgnoreCase(String roleName);
 }

@@ -3,7 +3,7 @@ server:
 
 gemini:
   api:
-    key: ${GEMINI_API_KEY:AIzaSyB5RI7EiYgpWlpOyV4lLQALW8NxszZG1og}
+    key: ${GEMINI_API_KEY:REMOVED}
 
 
 spring:

@@ -19,13 +19,13 @@ import lombok.Data;
  */
 @Entity
 @Data
-@Table (name = "EvaluacionFisica")
+@Table(name = "evaluacion_fisica")
 public class PhysicalEvaluation {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_evaluacion_fisica")
-    private Long IdEvaluation;
+    private Long idEvaluation;
  
     @Column(name = "fecha", nullable = false)
     private LocalDate date;

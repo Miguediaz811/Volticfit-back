@@ -105,6 +105,7 @@ public class JwtValidationFilter extends OncePerRequestFilter {
                 || path.equals("/auth/forgot-password")
                 || path.equals("/auth/recovery/reset")
                 || path.equals("/auth/restore-password")
-                || path.equals("/api/chatbot/message");
+                || path.equals("/api/chatbot/message")
+                || path.equals("/public/landing-stats");
     }
 }
