@@ -13,10 +13,12 @@ import lombok.RequiredArgsConstructor;
 public class WebConfig implements WebMvcConfigurer{
     
     private final RoleInterceptor roleInterceptor;
+    private final ActivityLogInterceptor activityLogInterceptor; 
  
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(roleInterceptor);
+        registry.addInterceptor(activityLogInterceptor).addPathPatterns("/api/**"); 
     }
 
 }
