@@ -8,8 +8,7 @@ server:
 
 gemini:
   api:
-    key: ${GEMINI_API_KEY:REMOVED}
-
+    key: ${GEMINI_API_KEY}
 
 spring:
   datasource:
