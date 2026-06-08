@@ -8,7 +8,7 @@ server:
 
 gemini:
   api:
-    key: ${GEMINI_API_KEY:}
+    key: ${GEMINI_API_KEY:REMOVED}
 
 
 spring:
@@ -29,6 +29,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
   mail:
     host: smtp.gmail.com

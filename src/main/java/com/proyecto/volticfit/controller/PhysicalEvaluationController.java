@@ -10,11 +10,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyecto.volticfit.dto.CreateEvaluationDTO;
+import com.proyecto.volticfit.enums.RoleEnum;
+import com.proyecto.volticfit.security.RequiresRole;
 import com.proyecto.volticfit.dto.InstructorAvailabilityDTO;
 import com.proyecto.volticfit.dto.MessageResponseDTO;
 import com.proyecto.volticfit.dto.RescheduleEvaluationDTO;
@@ -24,7 +27,6 @@ import com.proyecto.volticfit.service.PhysicalEvaluationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -75,6 +77,7 @@ public class PhysicalEvaluationController {
             @ApiResponse(responseCode = "400", description = "Slot not available or invalid data")
         }
     )
+    @RequiresRole({ RoleEnum.APRENDIZ, RoleEnum.FUNCIONARIO })
     @PostMapping
     public ResponseEntity<MessageResponseDTO> scheduleEvaluation(
             @Valid @RequestBody CreateEvaluationDTO request,
@@ -90,6 +93,25 @@ public class PhysicalEvaluationController {
         }
     }
  
+    @Operation(summary = "Get all evaluations (admin only)")
+    @RequiresRole({ RoleEnum.ADMIN })
+    @GetMapping("/all")
+    public ResponseEntity<Object> getAllEvaluations() {
+        try {
+            List<PhysicalEvaluation> evaluations = evaluationService.getAllEvaluations();
+            if (evaluations.isEmpty()) {
+                MessageResponseDTO response = new MessageResponseDTO();
+                response.setMessage("No evaluations found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+            return ResponseEntity.ok(evaluations);
+        } catch (Exception e) {
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
     @Operation(summary = "Get all evaluations for the authenticated user")
     @GetMapping("/my-evaluations")
     public ResponseEntity<Object> getUserEvaluations(HttpServletRequest httpRequest) {

@@ -2,7 +2,6 @@ package com.proyecto.volticfit.entity;
 
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,7 +16,7 @@ import lombok.Data;
 
 
 @Entity
-@Table(name = "Mantenimiento")
+@Table(name = "mantenimiento")
 @Data
 public class MachineMaintenance {
 
@@ -26,16 +25,19 @@ public class MachineMaintenance {
     @Column(name = "id_mantenimiento")
     private Long idMaintenance;
 
+    @Column(name = "tipo")
     private String type;
 
+    @Column(name = "descripcion")
     private String description;
 
+    @Column(name = "fecha")
     private LocalDate date;
 
-    private LocalTime time;
-
+    @Column(name = "responsable")
     private String responsible;
 
+    @Column(name = "estado")
     private Boolean state;
 
     @ManyToOne

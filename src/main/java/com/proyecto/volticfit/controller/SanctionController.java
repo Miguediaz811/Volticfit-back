@@ -1,5 +1,6 @@
 package com.proyecto.volticfit.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.proyecto.volticfit.dto.MessageResponseDTO;
 import com.proyecto.volticfit.dto.Sanctions.CreateSanctionDTO;
+import com.proyecto.volticfit.dto.Sanctions.SanctionWithUserDTO;
 import com.proyecto.volticfit.dto.Sanctions.UpdateSanctionDTO;
 import com.proyecto.volticfit.entity.Sanction;
 import com.proyecto.volticfit.enums.RoleEnum;
@@ -52,21 +54,21 @@ public class SanctionController {
         try {
             String role = (String) request.getAttribute("role");
             Long userId = (Long) request.getAttribute("userId");
- 
-            List<Sanction> sanctions;
- 
+
+            List<SanctionWithUserDTO> sanctions;
+
             if (RoleEnum.ADMIN.getValue().equalsIgnoreCase(role)) {
-                sanctions = sanctionService.getAll();
+                sanctions = sanctionService.getAllWithUser();
             } else {
-                sanctions = sanctionService.getByUser(userId);
+                sanctions = sanctionService.getByUserWithUser(userId);
             }
- 
+
             if (sanctions.isEmpty()) {
                 MessageResponseDTO response = new MessageResponseDTO();
                 response.setMessage("No sanctions found");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
- 
+
             return ResponseEntity.ok(sanctions);
         } catch (Exception e) {
             MessageResponseDTO error = new MessageResponseDTO();
@@ -75,6 +77,24 @@ public class SanctionController {
         }
     }
  
+    @Operation(summary = "Get sanctions filtered by date range - ADMIN only")
+    @GetMapping("/report")
+    @RequiresRole(RoleEnum.ADMIN)
+    public ResponseEntity<Object> getSanctionsReport(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String startDate,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String endDate) {
+        try {
+            LocalDate start = startDate != null ? LocalDate.parse(startDate) : null;
+            LocalDate end   = endDate   != null ? LocalDate.parse(endDate)   : null;
+            List<SanctionWithUserDTO> sanctions = sanctionService.getAllWithUserFiltered(start, end);
+            return ResponseEntity.ok(sanctions);
+        } catch (Exception e) {
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
     @Operation(summary = "Get sanction by ID - ADMIN only",
             responses = {
                 @ApiResponse(responseCode = "200", description = "Sanction retrieved successfully",

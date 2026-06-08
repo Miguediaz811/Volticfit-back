@@ -2,6 +2,7 @@ package com.proyecto.volticfit.entity;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -41,6 +42,7 @@ public class MedicalRestriction {
     @Column(name = "estado")
     private Boolean state = true;
  
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_evaluacion", nullable = false)
     private Diagnosis diagnosis;

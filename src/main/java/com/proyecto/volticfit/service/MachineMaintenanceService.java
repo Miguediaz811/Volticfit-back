@@ -1,5 +1,6 @@
 package com.proyecto.volticfit.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -49,21 +50,14 @@ public class MachineMaintenanceService {
             if (request.getMachineId() == null) {
 
                 response.setStatus("ERROR");
-                response.setMessage("Machine is required");
+                response.setMessage("Selecciona un equipo para programar el mantenimiento");
                 return response;
             }
 
             if (request.getDate() == null) {
 
                 response.setStatus("ERROR");
-                response.setMessage("Maintenance date is required");
-                return response;
-            }
-
-            if (request.getTime() == null) {
-
-                response.setStatus("ERROR");
-                response.setMessage("Maintenance time is required");
+                response.setMessage("La fecha del mantenimiento es obligatoria");
                 return response;
             }
 
@@ -75,23 +69,22 @@ public class MachineMaintenanceService {
             if (machine == null) {
 
                 response.setStatus("ERROR");
-                response.setMessage("Machine not found");
+                response.setMessage("No se encontro el equipo seleccionado");
                 return response;
             }
 
             boolean exists =
                     maintenanceRepository
-                            .findByMachine_IdMachineAndDateAndTime(
+                            .findByMachine_IdMachineAndDate(
                                     request.getMachineId(),
-                                    request.getDate(),
-                                    request.getTime())
+                                    request.getDate())
                             .isPresent();
 
             if (exists) {
 
                 response.setStatus("ERROR");
                 response.setMessage(
-                        "There is already a maintenance scheduled at that date and time");
+                        "Ya existe un mantenimiento programado para ese equipo en esa fecha");
 
                 return response;
             }
@@ -102,10 +95,12 @@ public class MachineMaintenanceService {
             maintenance.setMachine(machine);
             maintenance.setDate(
                     request.getDate());
-            maintenance.setTime(
-                    request.getTime());
+            maintenance.setType(
+                    request.getType());
             maintenance.setDescription(
                     request.getDescription());
+            maintenance.setResponsible(
+                    request.getResponsible());
             maintenance.setState(true);
 
             maintenanceRepository.save(
@@ -113,7 +108,7 @@ public class MachineMaintenanceService {
 
             response.setStatus("SUCCESS");
             response.setMessage(
-                    "Maintenance scheduled successfully");
+                    "Mantenimiento programado correctamente");
 
             log.info(
                     "Maintenance scheduled for machine {}",
@@ -127,7 +122,7 @@ public class MachineMaintenanceService {
 
             response.setStatus("ERROR");
             response.setMessage(
-                    "Internal server error");
+                    "No se pudo programar el mantenimiento. Verifica la informacion e intenta nuevamente.");
         }
 
         return response;
@@ -146,5 +141,40 @@ public class MachineMaintenanceService {
 
         return maintenanceRepository
                 .findByMachine_IdMachine(idMachine);
+    }
+
+    public List<MachineMaintenance> getAllMaintenanceHistory(String requesterRole) {
+        if (!"admin".equalsIgnoreCase(requesterRole)) {
+            throw new RuntimeException("No tienes permiso para consultar mantenimientos");
+        }
+        return maintenanceRepository.findAll();
+    }
+
+    /**
+     * Obtiene todos los mantenimientos filtrados por rango de fechas.
+     */
+    public List<MachineMaintenance> getAllMaintenanceFiltered(String requesterRole, LocalDate startDate, LocalDate endDate) {
+        if (!"admin".equalsIgnoreCase(requesterRole)) {
+            throw new RuntimeException("No tienes permiso para consultar mantenimientos");
+        }
+        return maintenanceRepository.findAll().stream()
+                .filter(m -> {
+                    // Excluir registros sin máquina o con nombre "sin maquina"
+                    if (m.getMachine() == null) return false;
+                    String machineName = m.getMachine().getName();
+                    if (machineName == null || machineName.trim().equalsIgnoreCase("sin maquina")) return false;
+                    // Filtro por fecha
+                    if (startDate == null && endDate == null) return true;
+                    if (m.getDate() == null) return false;
+                    if (startDate != null && m.getDate().isBefore(startDate)) return false;
+                    if (endDate != null && m.getDate().isAfter(endDate)) return false;
+                    return true;
+                })
+                .sorted((a, b) -> {
+                    if (a.getDate() == null) return 1;
+                    if (b.getDate() == null) return -1;
+                    return b.getDate().compareTo(a.getDate());
+                })
+                .toList();
     }
 }

@@ -27,6 +27,16 @@ public class NotificationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
 
+
+    @PostMapping("/all")
+    @RequiresRole(RoleEnum.ADMIN)
+    public ResponseEntity<MessageResponseDTO> createForAll(@RequestBody NotificationRequestDTO request) {
+        notificationService.createNotificationForAll(request);
+        MessageResponseDTO res = new MessageResponseDTO();
+        res.setMessage("Notificación enviada a todos los usuarios activos");
+        return ResponseEntity.status(HttpStatus.CREATED).body(res);
+    }
+
     @GetMapping
     public ResponseEntity<?> getMyNotifications(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
@@ -50,5 +60,11 @@ public class NotificationController {
         MessageResponseDTO res = new MessageResponseDTO();
         res.setMessage("Notificación eliminada permanentemente de la caché");
         return ResponseEntity.ok(res);
+    }
+
+    @GetMapping("/broadcast-history")
+    @RequiresRole(RoleEnum.ADMIN)
+    public ResponseEntity<?> getBroadcastHistory() {
+        return ResponseEntity.ok(notificationService.getBroadcastHistory());
     }
 }

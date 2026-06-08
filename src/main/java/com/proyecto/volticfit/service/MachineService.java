@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.proyecto.volticfit.dto.Machine.MachineRequestDTO;
 import com.proyecto.volticfit.dto.Machine.MachineResponseDTO;
+import com.proyecto.volticfit.dto.Machine.UpdateMachineDTO;
 import com.proyecto.volticfit.entity.Machine;
 import com.proyecto.volticfit.repository.MachineRepository;
 
@@ -142,5 +143,55 @@ public class MachineService {
     public List<Machine> obtenerMaquinas() {
 
         return machineRepository.findAll();
+    }
+
+    public MachineResponseDTO actualizarMaquina(Long id, UpdateMachineDTO request) {
+        MachineResponseDTO response = new MachineResponseDTO();
+
+        try {
+            Machine machine = machineRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("No se encontro la maquina"));
+
+            if (request.getName() == null || request.getName().isBlank()) {
+                response.setStatus("ERROR");
+                response.setMessage("El nombre es obligatorio");
+                return response;
+            }
+
+            if (request.getType() == null || request.getType().isBlank()) {
+                response.setStatus("ERROR");
+                response.setMessage("El tipo es obligatorio");
+                return response;
+            }
+
+            if (request.getState() == null) {
+                response.setStatus("ERROR");
+                response.setMessage("El estado es obligatorio");
+                return response;
+            }
+
+            machineRepository.findByNameIgnoreCase(request.getName())
+                    .filter(existing -> !existing.getIdMachine().equals(id))
+                    .ifPresent(existing -> {
+                        throw new RuntimeException("Ya existe una maquina con ese nombre");
+                    });
+
+            machine.setName(request.getName());
+            machine.setType(request.getType());
+            machine.setState(request.getState());
+            machineRepository.save(machine);
+
+            response.setStatus("SUCCESS");
+            response.setMessage("Maquina actualizada correctamente");
+        } catch (RuntimeException e) {
+            response.setStatus("ERROR");
+            response.setMessage(e.getMessage());
+        } catch (Exception e) {
+            log.error("Error actualizando maquina: {}", e.getMessage());
+            response.setStatus("ERROR");
+            response.setMessage("No se pudo actualizar la maquina");
+        }
+
+        return response;
     }
 }

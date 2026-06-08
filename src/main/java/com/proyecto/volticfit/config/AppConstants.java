@@ -39,7 +39,43 @@ public class AppConstants {
     private int recoveryExpirationMinutes;
  
     /** Subject for password recovery emails */
-    public static final String RECOVERY_SUBJECT = "🔑 Recuperación de Contraseña - Volticfit";
+    public static final String RECOVERY_SUBJECT = "Recuperación de Contraseña - VolticFit";
+
+    /** HTML template for recovery email. Parameters: code, expiration minutes */
+    public static final String RECOVERY_HTML_TEMPLATE =
+        "<!DOCTYPE html>" +
+        "<html lang=\"es\">" +
+        "<head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"></head>" +
+        "<body style=\"margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;\">" +
+        "  <table width=\"100%%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f4f4f4;padding:40px 0;\">" +
+        "    <tr><td align=\"center\">" +
+        "      <table width=\"560\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#1a1a1a;border-radius:12px;overflow:hidden;\">" +
+        "        <!-- Header -->" +
+        "        <tr><td style=\"background:#1a1a1a;padding:32px 40px 24px;text-align:center;border-bottom:3px solid #f5a623;\">" +
+        "          <span style=\"font-size:28px;font-weight:900;color:#f5a623;letter-spacing:2px;\">VOLTIC FIT</span><br>" +
+        "          <span style=\"font-size:12px;color:#888;letter-spacing:1px;\">GESTIÓN DE GIMNASIO</span>" +
+        "        </td></tr>" +
+        "        <!-- Body -->" +
+        "        <tr><td style=\"padding:36px 40px;\">" +
+        "          <p style=\"color:#ffffff;font-size:18px;font-weight:bold;margin:0 0 8px;\">Recuperación de contraseña</p>" +
+        "          <p style=\"color:#aaaaaa;font-size:14px;margin:0 0 28px;\">Hemos recibido una solicitud para restablecer la contraseña de tu cuenta. Usa el siguiente código de verificación:</p>" +
+        "          <!-- Code box -->" +
+        "          <div style=\"background:#242424;border:2px solid #f5a623;border-radius:10px;padding:24px;text-align:center;margin:0 0 28px;\">" +
+        "            <span style=\"font-size:42px;font-weight:900;letter-spacing:12px;color:#f5a623;\">%s</span>" +
+        "          </div>" +
+        "          <p style=\"color:#aaaaaa;font-size:13px;margin:0 0 24px;\">Este código expirará en <strong style=\"color:#ffffff;\">%d minutos</strong>. Si no solicitaste este cambio, puedes ignorar este mensaje con tranquilidad.</p>" +
+        "          <div style=\"background:#2a2a2a;border-radius:8px;padding:14px 18px;border-left:4px solid #f5a623;\">" +
+        "            <p style=\"color:#aaa;font-size:12px;margin:0;\">⚠️ Por seguridad, nunca compartas este código con nadie. VolticFit jamás te lo pedirá.</p>" +
+        "          </div>" +
+        "        </td></tr>" +
+        "        <!-- Footer -->" +
+        "        <tr><td style=\"background:#111;padding:20px 40px;text-align:center;border-top:1px solid #2a2a2a;\">" +
+        "          <p style=\"color:#555;font-size:12px;margin:0;\">© 2025 VolticFit · Todos los derechos reservados</p>" +
+        "        </td></tr>" +
+        "      </table>" +
+        "    </td></tr>" +
+        "  </table>" +
+        "</body></html>";
  
     /**
      * Body template for the recovery email.

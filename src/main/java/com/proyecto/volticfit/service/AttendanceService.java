@@ -266,6 +266,41 @@ public class AttendanceService {
         return response;
     }
 
+    /**
+     * Returns all attendance records for all users (admin only), optionally filtered by date range.
+     *
+     * @param startDate optional start date filter (inclusive)
+     * @param endDate   optional end date filter (inclusive)
+     * @return list of attendance records with user info
+     */
+    public List<AttendanceListResponseDTO> getAllAttendance(LocalDate startDate, LocalDate endDate) {
+        return attendanceRepository.findAll().stream()
+                .filter(att -> {
+                    if (startDate == null && endDate == null) return true;
+                    LocalDate entryDate = att.getEntryTime() != null ? att.getEntryTime().toLocalDate() : null;
+                    if (entryDate == null) return false;
+                    if (startDate != null && entryDate.isBefore(startDate)) return false;
+                    if (endDate != null && entryDate.isAfter(endDate)) return false;
+                    return true;
+                })
+                .sorted((a, b) -> b.getEntryTime().compareTo(a.getEntryTime()))
+                .map(att -> {
+                    Users user = att.getUser();
+                    String fullName = user == null ? "-"
+                            : ((user.getNames() == null ? "" : user.getNames()) + " "
+                               + (user.getSurnames() == null ? "" : user.getSurnames())).trim();
+                    return new AttendanceListResponseDTO(
+                            att.getIdAttendance(),
+                            fullName,
+                            user == null ? "-" : user.getDocNum(),
+                            att.getEntryTime(),
+                            att.getExitTime(),
+                            att.getRegistrationType()
+                    );
+                })
+                .toList();
+    }
+
     private QrGeneratedResponseDTO buildQRResponse(String token) {
         try {
             QRCodeWriter qrCodeWriter = new QRCodeWriter();

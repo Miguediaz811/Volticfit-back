@@ -3,13 +3,16 @@ package com.proyecto.volticfit.controller;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyecto.volticfit.dto.Machine.MachineRequestDTO;
 import com.proyecto.volticfit.dto.Machine.MachineResponseDTO;
+import com.proyecto.volticfit.dto.Machine.UpdateMachineDTO;
 import com.proyecto.volticfit.entity.Machine;
 import com.proyecto.volticfit.service.MachineService;
 
@@ -57,5 +60,13 @@ public class MachineController {
 
         return machineService
                 .obtenerMaquinas();
+    }
+
+    @PutMapping("/{id}")
+    public MachineResponseDTO actualizar(
+            @PathVariable Long id,
+            @RequestBody UpdateMachineDTO request) {
+
+        return machineService.actualizarMaquina(id, request);
     }
 }

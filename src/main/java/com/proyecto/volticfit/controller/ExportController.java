@@ -6,7 +6,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.proyecto.volticfit.dto.MessageResponseDTO;
 import com.proyecto.volticfit.enums.RoleEnum;
 import com.proyecto.volticfit.security.RequiresRole;
 import com.proyecto.volticfit.service.ExportService;

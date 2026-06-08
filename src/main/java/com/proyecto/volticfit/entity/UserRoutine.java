@@ -38,7 +38,4 @@ public class UserRoutine {
  
     @Column(name = "estado")
     private Boolean state = true;
- 
-    @Column(name = "activa")
-    private Boolean active = false;
 }

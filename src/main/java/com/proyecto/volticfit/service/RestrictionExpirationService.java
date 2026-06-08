@@ -32,8 +32,6 @@ public class RestrictionExpirationService {
     @Transactional
     public void expireRestrictions() {
         LocalDate today = LocalDate.now();
-        List<MedicalRestriction> activeRestrictions = restrictionRepository
-                .findByDiagnosisIdDiagnosisAndState(null, true);
 
         // Find all active restrictions that have expired
         List<MedicalRestriction> allActive = restrictionRepository.findAll()

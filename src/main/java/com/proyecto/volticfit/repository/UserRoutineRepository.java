@@ -26,7 +26,7 @@ public interface UserRoutineRepository extends JpaRepository<UserRoutine, UserRo
      * @param userId ID del usuario
      * @return  Optional que contiene la rutina activa si se encuentra, o vacío si no se encuentra
      */
-    Optional<UserRoutine> findByUserIdUserAndActiveTrue(Long userId);
+    Optional<UserRoutine> findByUserIdUserAndStateTrue(Long userId);
 
     /**
      * Encuentra las rutinas asociadas a un usuario específico filtrando por su estado activo o inactivo.
@@ -34,5 +34,5 @@ public interface UserRoutineRepository extends JpaRepository<UserRoutine, UserRo
      * @param active Estado de la rutina (true para activas, false para inactivas)
      * @return Lista de rutinas asociadas al usuario dado y con el estado especificado
      */
-    List<UserRoutine> findByUserIdUserAndActive(Long userId, Boolean active);
+    List<UserRoutine> findByUserIdUserAndState(Long userId, Boolean active);
 }

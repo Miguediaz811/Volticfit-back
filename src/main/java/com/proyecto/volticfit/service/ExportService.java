@@ -53,32 +53,32 @@ public class ExportService {
             PdfWriter.getInstance(document, out);
             document.open();
 
-            document.add(new Paragraph("Volticfit - Users Report",
+            document.add(new Paragraph("Volticfit - Reporte de Usuarios",
                     FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16)));
-            document.add(new Paragraph("Generated: " + LocalDate.now(),
+            document.add(new Paragraph("Generado: " + LocalDate.now(),
                     FontFactory.getFont(FontFactory.HELVETICA, 10)));
             document.add(Chunk.NEWLINE);
 
             PdfPTable table = new PdfPTable(5);
             table.setWidthPercentage(100);
-            addPdfHeader(table, "ID", "Names", "Surnames", "Email", "Status");
+            addPdfHeader(table, "ID", "Nombres", "Apellidos", "Correo", "Estado");
 
             for (Users u : users) {
                 table.addCell(String.valueOf(u.getIdUser()));
                 table.addCell(u.getNames());
                 table.addCell(u.getSurnames());
                 table.addCell(u.getEmail());
-                table.addCell(Boolean.TRUE.equals(u.getState()) ? "Active" : "Inactive");
+                table.addCell(Boolean.TRUE.equals(u.getState()) ? "Activo" : "Inactivo");
             }
 
             document.add(table);
             document.close();
-            log.info("Users PDF report generated");
+            log.info("Reporte PDF de usuarios generado");
             return out.toByteArray();
 
         } catch (DocumentException e) {
-            log.error("Error generating users PDF: {}", e.getMessage());
-            throw new RuntimeException("Error generating PDF report");
+            log.error("Error generando PDF de usuarios: {}", e.getMessage());
+            throw new RuntimeException("Error generando reporte PDF");
         }
     }
 
@@ -93,15 +93,15 @@ public class ExportService {
             PdfWriter.getInstance(document, out);
             document.open();
 
-            document.add(new Paragraph("Volticfit - Attendance Report",
+            document.add(new Paragraph("Volticfit - Reporte de Asistencia",
                     FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16)));
-            document.add(new Paragraph("Generated: " + LocalDate.now(),
+            document.add(new Paragraph("Generado: " + LocalDate.now(),
                     FontFactory.getFont(FontFactory.HELVETICA, 10)));
             document.add(Chunk.NEWLINE);
 
             PdfPTable table = new PdfPTable(4);
             table.setWidthPercentage(100);
-            addPdfHeader(table, "User", "Entry Time", "Exit Time", "Type");
+            addPdfHeader(table, "Usuario", "Hora de Entrada", "Hora de Salida", "Tipo");
 
             for (Attendance a : attendances) {
                 table.addCell(a.getUser().getNames() + " " + a.getUser().getSurnames());
@@ -112,12 +112,12 @@ public class ExportService {
 
             document.add(table);
             document.close();
-            log.info("Attendance PDF report generated");
+            log.info("Reporte PDF de asistencia generado");
             return out.toByteArray();
 
         } catch (DocumentException e) {
-            log.error("Error generating attendance PDF: {}", e.getMessage());
-            throw new RuntimeException("Error generating PDF report");
+            log.error("Error generando PDF de asistencia: {}", e.getMessage());
+            throw new RuntimeException("Error generando reporte PDF");
         }
     }
 
@@ -132,31 +132,31 @@ public class ExportService {
             PdfWriter.getInstance(document, out);
             document.open();
 
-            document.add(new Paragraph("Volticfit - Machines Report",
+            document.add(new Paragraph("Volticfit - Reporte de Máquinas",
                     FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16)));
-            document.add(new Paragraph("Generated: " + LocalDate.now(),
+            document.add(new Paragraph("Generado: " + LocalDate.now(),
                     FontFactory.getFont(FontFactory.HELVETICA, 10)));
             document.add(Chunk.NEWLINE);
 
             PdfPTable table = new PdfPTable(4);
             table.setWidthPercentage(100);
-            addPdfHeader(table, "ID", "Name", "Type", "Status");
+            addPdfHeader(table, "ID", "Nombre", "Tipo", "Estado");
 
             for (Machine m : machines) {
                 table.addCell(String.valueOf(m.getIdMachine()));
                 table.addCell(m.getName());
                 table.addCell(m.getType());
-                table.addCell(Boolean.TRUE.equals(m.getState()) ? "Active" : "Inactive");
+                table.addCell(Boolean.TRUE.equals(m.getState()) ? "Activo" : "Inactivo");
             }
 
             document.add(table);
             document.close();
-            log.info("Machines PDF report generated");
+            log.info("Reporte PDF de máquinas generado");
             return out.toByteArray();
 
         } catch (DocumentException e) {
-            log.error("Error generating machines PDF: {}", e.getMessage());
-            throw new RuntimeException("Error generating PDF report");
+            log.error("Error generando PDF de máquinas: {}", e.getMessage());
+            throw new RuntimeException("Error generando reporte PDF");
         }
     }
 
@@ -171,15 +171,15 @@ public class ExportService {
             PdfWriter.getInstance(document, out);
             document.open();
 
-            document.add(new Paragraph("Volticfit - Sanctions Report",
+            document.add(new Paragraph("Volticfit - Reporte de Sanciones",
                     FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16)));
-            document.add(new Paragraph("Generated: " + LocalDate.now(),
+            document.add(new Paragraph("Generado: " + LocalDate.now(),
                     FontFactory.getFont(FontFactory.HELVETICA, 10)));
             document.add(Chunk.NEWLINE);
 
             PdfPTable table = new PdfPTable(5);
             table.setWidthPercentage(100);
-            addPdfHeader(table, "ID", "Type", "Description", "Start Date", "End Date");
+            addPdfHeader(table, "ID", "Tipo", "Descripción", "Fecha Inicio", "Fecha Fin");
 
             for (Sanction s : sanctions) {
                 table.addCell(String.valueOf(s.getIdSanction()));
@@ -191,12 +191,12 @@ public class ExportService {
 
             document.add(table);
             document.close();
-            log.info("Sanctions PDF report generated");
+            log.info("Reporte PDF de sanciones generado");
             return out.toByteArray();
 
         } catch (DocumentException e) {
-            log.error("Error generating sanctions PDF: {}", e.getMessage());
-            throw new RuntimeException("Error generating PDF report");
+            log.error("Error generando PDF de sanciones: {}", e.getMessage());
+            throw new RuntimeException("Error generando reporte PDF");
         }
     }
 
@@ -210,8 +210,8 @@ public class ExportService {
     public byte[] exportUsersExcel() {
         List<Users> users = usersRepository.findAll();
         try (Workbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet("Users");
-            createExcelHeader(sheet, "ID", "Names", "Surnames", "Email", "Status");
+            Sheet sheet = workbook.createSheet("Usuarios");
+            createExcelHeader(sheet, "ID", "Nombres", "Apellidos", "Correo", "Estado");
 
             int rowNum = 1;
             for (Users u : users) {
@@ -220,17 +220,17 @@ public class ExportService {
                 row.createCell(1).setCellValue(u.getNames());
                 row.createCell(2).setCellValue(u.getSurnames());
                 row.createCell(3).setCellValue(u.getEmail());
-                row.createCell(4).setCellValue(Boolean.TRUE.equals(u.getState()) ? "Active" : "Inactive");
+                row.createCell(4).setCellValue(Boolean.TRUE.equals(u.getState()) ? "Activo" : "Inactivo");
             }
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             workbook.write(out);
-            log.info("Users Excel report generated");
+            log.info("Reporte Excel de usuarios generado");
             return out.toByteArray();
 
         } catch (IOException e) {
-            log.error("Error generating users Excel: {}", e.getMessage());
-            throw new RuntimeException("Error generating Excel report");
+            log.error("Error generando Excel de usuarios: {}", e.getMessage());
+            throw new RuntimeException("Error generando reporte Excel");
         }
     }
 
@@ -240,8 +240,8 @@ public class ExportService {
     public byte[] exportAttendanceExcel() {
         List<Attendance> attendances = attendanceRepository.findAll();
         try (Workbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet("Attendance");
-            createExcelHeader(sheet, "User", "Entry Time", "Exit Time", "Type");
+            Sheet sheet = workbook.createSheet("Asistencia");
+            createExcelHeader(sheet, "Usuario", "Hora de Entrada", "Hora de Salida", "Tipo");
 
             int rowNum = 1;
             for (Attendance a : attendances) {
@@ -254,12 +254,12 @@ public class ExportService {
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             workbook.write(out);
-            log.info("Attendance Excel report generated");
+            log.info("Reporte Excel de asistencia generado");
             return out.toByteArray();
 
         } catch (IOException e) {
-            log.error("Error generating attendance Excel: {}", e.getMessage());
-            throw new RuntimeException("Error generating Excel report");
+            log.error("Error generando Excel de asistencia: {}", e.getMessage());
+            throw new RuntimeException("Error generando reporte Excel");
         }
     }
 
@@ -269,8 +269,8 @@ public class ExportService {
     public byte[] exportMachinesExcel() {
         List<Machine> machines = machineRepository.findAll();
         try (Workbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet("Machines");
-            createExcelHeader(sheet, "ID", "Name", "Type", "Status");
+            Sheet sheet = workbook.createSheet("Máquinas");
+            createExcelHeader(sheet, "ID", "Nombre", "Tipo", "Estado");
 
             int rowNum = 1;
             for (Machine m : machines) {
@@ -278,17 +278,17 @@ public class ExportService {
                 row.createCell(0).setCellValue(m.getIdMachine());
                 row.createCell(1).setCellValue(m.getName());
                 row.createCell(2).setCellValue(m.getType());
-                row.createCell(3).setCellValue(Boolean.TRUE.equals(m.getState()) ? "Active" : "Inactive");
+                row.createCell(3).setCellValue(Boolean.TRUE.equals(m.getState()) ? "Activo" : "Inactivo");
             }
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             workbook.write(out);
-            log.info("Machines Excel report generated");
+            log.info("Reporte Excel de máquinas generado");
             return out.toByteArray();
 
         } catch (IOException e) {
-            log.error("Error generating machines Excel: {}", e.getMessage());
-            throw new RuntimeException("Error generating Excel report");
+            log.error("Error generando Excel de máquinas: {}", e.getMessage());
+            throw new RuntimeException("Error generando reporte Excel");
         }
     }
 
@@ -298,8 +298,8 @@ public class ExportService {
     public byte[] exportSanctionsExcel() {
         List<Sanction> sanctions = sanctionRepository.findAll();
         try (Workbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet("Sanctions");
-            createExcelHeader(sheet, "ID", "Type", "Description", "Start Date", "End Date");
+            Sheet sheet = workbook.createSheet("Sanciones");
+            createExcelHeader(sheet, "ID", "Tipo", "Descripción", "Fecha Inicio", "Fecha Fin");
 
             int rowNum = 1;
             for (Sanction s : sanctions) {
@@ -313,12 +313,12 @@ public class ExportService {
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             workbook.write(out);
-            log.info("Sanctions Excel report generated");
+            log.info("Reporte Excel de sanciones generado");
             return out.toByteArray();
 
         } catch (IOException e) {
-            log.error("Error generating sanctions Excel: {}", e.getMessage());
-            throw new RuntimeException("Error generating Excel report");
+            log.error("Error generando Excel de sanciones: {}", e.getMessage());
+            throw new RuntimeException("Error generando reporte Excel");
         }
     }
 
@@ -333,14 +333,14 @@ public class ExportService {
         List<Users> users = usersRepository.findAll();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PrintWriter writer = new PrintWriter(out);
-        writer.println("ID,Names,Surnames,Email,Status");
+        writer.println("ID,Nombres,Apellidos,Correo,Estado");
         for (Users u : users) {
             writer.printf("%d,%s,%s,%s,%s%n",
                     u.getIdUser(), u.getNames(), u.getSurnames(),
-                    u.getEmail(), Boolean.TRUE.equals(u.getState()) ? "Active" : "Inactive");
+                    u.getEmail(), Boolean.TRUE.equals(u.getState()) ? "Activo" : "Inactivo");
         }
         writer.flush();
-        log.info("Users CSV report generated");
+        log.info("Reporte CSV de usuarios generado");
         return out.toByteArray();
     }
 
@@ -351,7 +351,7 @@ public class ExportService {
         List<Attendance> attendances = attendanceRepository.findAll();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PrintWriter writer = new PrintWriter(out);
-        writer.println("User,Entry Time,Exit Time,Type");
+        writer.println("Usuario,Hora de Entrada,Hora de Salida,Tipo");
         for (Attendance a : attendances) {
             writer.printf("%s,%s,%s,%s%n",
                     a.getUser().getNames() + " " + a.getUser().getSurnames(),
@@ -360,7 +360,7 @@ public class ExportService {
                     a.getRegistrationType());
         }
         writer.flush();
-        log.info("Attendance CSV report generated");
+        log.info("Reporte CSV de asistencia generado");
         return out.toByteArray();
     }
 
@@ -371,14 +371,14 @@ public class ExportService {
         List<Machine> machines = machineRepository.findAll();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PrintWriter writer = new PrintWriter(out);
-        writer.println("ID,Name,Type,Status");
+        writer.println("ID,Nombre,Tipo,Estado");
         for (Machine m : machines) {
             writer.printf("%d,%s,%s,%s%n",
                     m.getIdMachine(), m.getName(), m.getType(),
-                    Boolean.TRUE.equals(m.getState()) ? "Active" : "Inactive");
+                    Boolean.TRUE.equals(m.getState()) ? "Activo" : "Inactivo");
         }
         writer.flush();
-        log.info("Machines CSV report generated");
+        log.info("Reporte CSV de máquinas generado");
         return out.toByteArray();
     }
 
@@ -389,7 +389,7 @@ public class ExportService {
         List<Sanction> sanctions = sanctionRepository.findAll();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PrintWriter writer = new PrintWriter(out);
-        writer.println("ID,Type,Description,Start Date,End Date");
+        writer.println("ID,Tipo,Descripción,Fecha Inicio,Fecha Fin");
         for (Sanction s : sanctions) {
             writer.printf("%d,%s,%s,%s,%s%n",
                     s.getIdSanction(), s.getType(),
@@ -398,7 +398,7 @@ public class ExportService {
                     s.getEndDate() != null ? s.getEndDate().toString() : "-");
         }
         writer.flush();
-        log.info("Sanctions CSV report generated");
+        log.info("Reporte CSV de sanciones generado");
         return out.toByteArray();
     }
 

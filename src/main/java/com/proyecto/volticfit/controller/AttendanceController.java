@@ -1,5 +1,8 @@
 package com.proyecto.volticfit.controller;
 
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +21,7 @@ import com.proyecto.volticfit.dto.Attendance.ManualAttendanceRequestDTO;
 import com.proyecto.volticfit.dto.QrCode.QrGeneratedResponseDTO;
 import com.proyecto.volticfit.service.AttendanceService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -105,5 +109,24 @@ public class AttendanceController {
             @RequestParam(defaultValue = "10") int size
     ) {
         return ResponseEntity.ok(attendanceService.getAttendanceHistory(authHeader, page, size));
+    }
+
+    /**
+     * Returns all attendance records for all users (admin use).
+     * Optionally filtered by startDate and endDate (format: yyyy-MM-dd).
+     */
+    @GetMapping("/all")
+    public ResponseEntity<List<AttendanceListResponseDTO>> getAllAttendance(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            HttpServletRequest httpRequest
+    ) {
+        String role = (String) httpRequest.getAttribute("role");
+        if (!"admin".equalsIgnoreCase(role) && !"instructor".equalsIgnoreCase(role)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        LocalDate start = startDate != null ? LocalDate.parse(startDate) : null;
+        LocalDate end   = endDate   != null ? LocalDate.parse(endDate)   : null;
+        return ResponseEntity.ok(attendanceService.getAllAttendance(start, end));
     }
 }

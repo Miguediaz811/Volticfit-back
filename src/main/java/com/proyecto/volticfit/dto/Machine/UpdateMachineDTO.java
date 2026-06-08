@@ -13,5 +13,5 @@ public class UpdateMachineDTO {
 
     private String type;
 
-    private String state; 
+    private Boolean state;
 }

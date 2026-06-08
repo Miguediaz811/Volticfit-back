@@ -82,18 +82,22 @@ public class PhysicalEvaluationService {
      */
     @Transactional
     public MessageResponseDTO scheduleEvaluation(CreateEvaluationDTO request, Long userId) {
+        if (request.getDate().isBefore(LocalDate.now())) {
+            throw new RuntimeException("Selecciona una fecha desde hoy en adelante");
+        }
+
         if (!SHIFT_START_TIMES.contains(request.getStartTime())) {
-            throw new RuntimeException("Invalid shift time");
+            throw new RuntimeException("Selecciona un horario valido");
         }
  
         Users user = usersRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("No se encontro el usuario"));
  
         Users instructor = usersRepository.findById(request.getInstructorId())
-                .orElseThrow(() -> new RuntimeException("Instructor not found"));
+                .orElseThrow(() -> new RuntimeException("No se encontro el instructor"));
  
         if (!RoleEnum.ADMIN.getValue().equalsIgnoreCase(instructor.getRole().getName())) {
-            throw new RuntimeException("The selected user is not an instructor");
+            throw new RuntimeException("El usuario seleccionado no puede recibir evaluaciones");
         }
  
         
@@ -104,7 +108,7 @@ public class PhysicalEvaluationService {
                         request.getInstructorId(), request.getDate(),
                         request.getStartTime(), "cancelada");
         if (taken) {
-            throw new RuntimeException("This slot is not available for the selected instructor");
+            throw new RuntimeException("El horario seleccionado ya no esta disponible");
         }
  
         PhysicalEvaluation evaluation = new PhysicalEvaluation();
@@ -121,12 +125,20 @@ public class PhysicalEvaluationService {
                 userId, request.getInstructorId());
  
         MessageResponseDTO response = new MessageResponseDTO();
-        response.setMessage("Physical evaluation scheduled successfully");
+        response.setMessage("Evaluacion agendada correctamente");
         return response;
     }
  
     /**
-     * Returns all evaluations for a user.
+     * Returns all evaluations (admin only).
+     *
+     * @return list of all evaluations
+     */
+    public List<PhysicalEvaluation> getAllEvaluations() {
+        return evaluationRepository.findAll();
+    }
+
+    /**
      *
      * @param userId the user ID
      * @return list of evaluations
@@ -152,26 +164,30 @@ public class PhysicalEvaluationService {
     public MessageResponseDTO rescheduleEvaluation(Long id, RescheduleEvaluationDTO request,
             Long requesterId, String requesterRole) {
         PhysicalEvaluation evaluation = evaluationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Evaluation not found"));
+                .orElseThrow(() -> new RuntimeException("Evaluacion no encontrada"));
+
+        if (request.getDate().isBefore(LocalDate.now())) {
+            throw new RuntimeException("Selecciona una fecha desde hoy en adelante");
+        }
  
         if (!"admin".equalsIgnoreCase(requesterRole)
                 && !evaluation.getUser().getIdUser().equals(requesterId)) {
-            throw new RuntimeException("You do not have permission to reschedule this evaluation");
+            throw new RuntimeException("No tienes permiso para reprogramar esta evaluacion");
         }
  
         if ("cancelada".equals(evaluation.getStatus())) {
-            throw new RuntimeException("Cannot reschedule a cancelled evaluation");
+            throw new RuntimeException("No se puede reprogramar una evaluacion cancelada");
         }
  
         if (!SHIFT_START_TIMES.contains(request.getStartTime())) {
-            throw new RuntimeException("Invalid shift time");
+            throw new RuntimeException("Selecciona un horario valido");
         }
  
         Users instructor = usersRepository.findById(request.getInstructorId())
-                .orElseThrow(() -> new RuntimeException("Instructor not found"));
+                .orElseThrow(() -> new RuntimeException("No se encontro el instructor"));
 
         if (!RoleEnum.ADMIN.getValue().equalsIgnoreCase(instructor.getRole().getName())) {
-            throw new RuntimeException("The selected user is not an instructor");
+            throw new RuntimeException("El usuario seleccionado no puede recibir evaluaciones");
         }
  
         boolean taken = evaluationRepository
@@ -179,7 +195,7 @@ public class PhysicalEvaluationService {
                         request.getInstructorId(), request.getDate(),
                         request.getStartTime(), "cancelada");
         if (taken) {
-            throw new RuntimeException("This slot is not available for the selected instructor");
+            throw new RuntimeException("El horario seleccionado ya no esta disponible");
         }
  
         evaluation.setDate(request.getDate());
@@ -191,7 +207,7 @@ public class PhysicalEvaluationService {
         log.info("Evaluation {} rescheduled by user: {}", id, requesterId);
  
         MessageResponseDTO response = new MessageResponseDTO();
-        response.setMessage("Physical evaluation rescheduled successfully");
+        response.setMessage("Evaluacion reprogramada correctamente");
         return response;
     }
  
@@ -206,15 +222,15 @@ public class PhysicalEvaluationService {
     @Transactional
     public MessageResponseDTO cancelEvaluation(Long id, Long requesterId, String requesterRole) {
         PhysicalEvaluation evaluation = evaluationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Evaluation not found"));
+                .orElseThrow(() -> new RuntimeException("Evaluacion no encontrada"));
  
         if (!"admin".equalsIgnoreCase(requesterRole)
                 && !evaluation.getUser().getIdUser().equals(requesterId)) {
-            throw new RuntimeException("You do not have permission to cancel this evaluation");
+            throw new RuntimeException("No tienes permiso para cancelar esta evaluacion");
         }
  
         if ("cancelada".equals(evaluation.getStatus())) {
-            throw new RuntimeException("Evaluation is already cancelled");
+            throw new RuntimeException("La evaluacion ya esta cancelada");
         }
  
         evaluation.setStatus("cancelada");
@@ -223,7 +239,7 @@ public class PhysicalEvaluationService {
         log.info("Evaluation {} cancelled by user: {}", id, requesterId);
  
         MessageResponseDTO response = new MessageResponseDTO();
-        response.setMessage("Physical evaluation cancelled successfully");
+        response.setMessage("Evaluacion cancelada correctamente");
         return response;
     }
 

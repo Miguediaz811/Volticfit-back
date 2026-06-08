@@ -47,6 +47,7 @@ public class ReservationService {
      * @return list of shifts with availability
      */
     public List<ShiftResponseDTO> getAvailableShifts(LocalDate date) {
+        validateCurrentOrFutureDate(date);
         return SHIFT_START_TIMES.stream()
                 .map(startTime -> {
                     int taken = reservationRepository.countByDateAndStartTimeAndState(date, startTime, true);
@@ -71,6 +72,8 @@ public class ReservationService {
      */
     @Transactional
     public MessageResponseDTO createReservation(CreateReservationDTO request, Long userId) {
+        validateCurrentOrFutureDate(request.getDate());
+
         if (!SHIFT_START_TIMES.contains(request.getStartTime())) {
             throw new RuntimeException("Selecciona un horario valido");
         }
@@ -152,5 +155,14 @@ public class ReservationService {
         }
 
         return reservationRepository.findByState(true);
+    }
+
+    private void validateCurrentOrFutureDate(LocalDate date) {
+        if (date == null) {
+            throw new RuntimeException("La fecha es obligatoria");
+        }
+        if (date.isBefore(LocalDate.now())) {
+            throw new RuntimeException("Selecciona una fecha desde hoy en adelante");
+        }
     }
 }

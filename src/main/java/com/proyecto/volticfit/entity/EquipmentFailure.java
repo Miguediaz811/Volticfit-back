@@ -1,8 +1,14 @@
 package com.proyecto.volticfit.entity;
 
-import jakarta.persistence.*;
-import lombok.Data;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Data;
 
 @Data
 @Entity
@@ -10,18 +16,27 @@ import java.time.LocalDateTime;
 public class EquipmentFailure {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
-    private Long maquinaId; 
-    private Long usuarioReporteId; 
+    @Column(name = "maquina_id")
+    private Long maquinaId;
+
+    @Column(name = "usuario_reporte_id")
+    private Long usuarioReporteId;
+
+    @Column(name = "descripcion")
     private String descripcion;
-    
-    // Tarea 1.5: Asignar automáticamente estado inicial
-    private String estado = "Pendiente de revisión"; 
-    
-    // Tarea 1.7: Campos adicionales solo para Administrador
+
+    @Column(name = "estado")
+    private String estado = "Pendiente de revision";
+
+    @Column(name = "observaciones_admin")
     private String observacionesAdmin;
-    private String prioridad; 
-    
+
+    @Column(name = "prioridad")
+    private String prioridad;
+
+    @Column(name = "fecha_reporte")
     private LocalDateTime fechaReporte = LocalDateTime.now();
 }

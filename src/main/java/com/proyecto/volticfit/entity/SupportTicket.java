@@ -1,8 +1,14 @@
 package com.proyecto.volticfit.entity;
 
-import jakarta.persistence.*;
-import lombok.Data;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Data;
 
 @Data
 @Entity
@@ -10,10 +16,18 @@ import java.time.LocalDateTime;
 public class SupportTicket {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
+    @Column(name = "usuario_id")
     private Long usuarioId;
+
+    @Column(name = "consulta_texto")
     private String consultaTexto;
-    private String estado = "PENDIENTE"; // PENDIENTE, ESCALADA, RESUELTA
+
+    @Column(name = "estado")
+    private String estado = "PENDIENTE";
+
+    @Column(name = "fecha_inicio")
     private LocalDateTime fechaInicio = LocalDateTime.now();
 }

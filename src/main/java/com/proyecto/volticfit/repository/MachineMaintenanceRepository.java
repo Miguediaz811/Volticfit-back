@@ -1,7 +1,6 @@
 package com.proyecto.volticfit.repository;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,10 +11,9 @@ import com.proyecto.volticfit.entity.MachineMaintenance;
 public interface MachineMaintenanceRepository extends JpaRepository<MachineMaintenance, Long> {
 
     Optional<MachineMaintenance>
-    findByMachine_IdMachineAndDateAndTime(
+    findByMachine_IdMachineAndDate(
             Long idMachine,
-            LocalDate date,
-            LocalTime time
+            LocalDate date
     );
 
     List<MachineMaintenance>

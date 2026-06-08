@@ -3,6 +3,7 @@ package com.proyecto.volticfit.entity;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -42,10 +43,12 @@ public class PhysicalEvaluation {
     @Column(name = "notas")
     private String notes;
  
+    @JsonIgnoreProperties({"password", "hibernateLazyInitializer", "handler"})
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_usuario", nullable = false)
     private Users user;
  
+    @JsonIgnoreProperties({"password", "hibernateLazyInitializer", "handler"})
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_instructor", nullable = false)
     private Users instructor;

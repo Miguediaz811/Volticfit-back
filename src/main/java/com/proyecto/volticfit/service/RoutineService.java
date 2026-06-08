@@ -90,17 +90,17 @@ public class RoutineService {
     @Transactional
     public RoutineResponseDTO generateRoutine(Long userId) {
         Users user = usersRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado."));
 
         // Check 28-day minimum period
-        Optional<UserRoutine> activeRoutine = userRoutineRepository.findByUserIdUserAndActiveTrue(userId);
+        Optional<UserRoutine> activeRoutine = userRoutineRepository.findByUserIdUserAndStateTrue(userId);
         if (activeRoutine.isPresent()) {
             LocalDate lastAssignment = activeRoutine.get().getAssignmentDate();
             long daysSince = ChronoUnit.DAYS.between(lastAssignment, LocalDate.now());
             if (daysSince < MIN_DAYS_BETWEEN_ROUTINES) {
                 long daysRemaining = MIN_DAYS_BETWEEN_ROUTINES - daysSince;
                 throw new RuntimeException(
-                        "You can generate a new routine in " + daysRemaining + " days.");
+                        "Puedes generar una nueva rutina en " + daysRemaining + " día(s).");
             }
         }
 
@@ -134,7 +134,7 @@ public class RoutineService {
      * @return the active routine with exercises
      */
     public RoutineResponseDTO getActiveRoutine(Long userId) {
-        UserRoutine userRoutine = userRoutineRepository.findByUserIdUserAndActiveTrue(userId)
+        UserRoutine userRoutine = userRoutineRepository.findByUserIdUserAndStateTrue(userId)
                 .orElseThrow(() -> new RuntimeException("No active routine found"));
 
         Routine routine = userRoutine.getRoutine();
@@ -179,17 +179,17 @@ public class RoutineService {
     @Transactional
     public MessageResponseDTO completeExercise(CompleteExerciseDTO request, Long userId) {
         Users user = usersRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado."));
         Routine routine = routineRepository.findById(request.getRoutineId())
-                .orElseThrow(() -> new RuntimeException("Routine not found"));
+                .orElseThrow(() -> new RuntimeException("Rutina no encontrada."));
         Machine machine = machineRepository.findById(request.getMachineId())
-                .orElseThrow(() -> new RuntimeException("Machine not found"));
+                .orElseThrow(() -> new RuntimeException("Equipo no encontrado."));
 
         Optional<CompletedExercise> existing = completedExerciseRepository
                 .findByUserIdUserAndRoutineIdRoutineAndMachineIdMachine(
                         userId, request.getRoutineId(), request.getMachineId());
         if (existing.isPresent()) {
-            throw new RuntimeException("Exercise already marked as completed");
+            throw new RuntimeException("Este ejercicio ya fue marcado como completado.");
         }
 
         CompletedExercise completedExercise = new CompletedExercise();
@@ -202,7 +202,7 @@ public class RoutineService {
         log.info("Exercise completed by user: {} in routine: {}", userId, request.getRoutineId());
 
         MessageResponseDTO response = new MessageResponseDTO();
-        response.setMessage("Exercise marked as completed");
+        response.setMessage("Ejercicio marcado como completado.");
         return response;
     }
 
@@ -216,9 +216,9 @@ public class RoutineService {
     @Transactional
     public MessageResponseDTO completeRoutine(Long routineId, Long userId) {
         Users user = usersRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado."));
         Routine routine = routineRepository.findById(routineId)
-                .orElseThrow(() -> new RuntimeException("Routine not found"));
+                .orElseThrow(() -> new RuntimeException("Rutina no encontrada."));
         List<Exercise> exercises = exerciseRepository.findByRoutineIdRoutine(routineId);
 
         for (Exercise exercise : exercises) {
@@ -238,7 +238,7 @@ public class RoutineService {
         log.info("All exercises completed by user: {} in routine: {}", userId, routineId);
 
         MessageResponseDTO response = new MessageResponseDTO();
-        response.setMessage("All exercises marked as completed");
+        response.setMessage("Todos los ejercicios marcados como completados.");
         return response;
     }
 
@@ -282,7 +282,7 @@ public class RoutineService {
 
             // Deactivate previous routine
             previousActiveRoutine.ifPresent(prev -> {
-                prev.setActive(false);
+                prev.setState(false);
                 userRoutineRepository.save(prev);
             });
 
@@ -336,7 +336,6 @@ public class RoutineService {
             userRoutine.setRoutine(routine);
             userRoutine.setAssignmentDate(LocalDate.now());
             userRoutine.setState(true);
-            userRoutine.setActive(true);
             userRoutineRepository.save(userRoutine);
 
             log.info("Routine generated and saved for user: {}", user.getIdUser());
@@ -346,8 +345,21 @@ public class RoutineService {
                     routine.getLevel(), isPersonalized, warningMessage, exerciseDTOs);
 
         } catch (Exception e) {
-            log.error("Error parsing Gemini response: {}", e.getMessage());
-            throw new RuntimeException("Error processing routine from AI: " + e.getMessage());
+            log.error("Error generating/saving routine: {}", e.getMessage(), e);
+            String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+            if (msg.contains("error calling gemini api") || msg.contains("404") || msg.contains("401") || msg.contains("403")) {
+                throw new RuntimeException("El servicio de IA no está disponible en este momento. Intente de nuevo más tarde.");
+            }
+            if (msg.contains("unknown column") || msg.contains("field list") || msg.contains("jdbc")) {
+                throw new RuntimeException("Error de configuración en la base de datos. Contacte al administrador.");
+            }
+            if (msg.contains("jsonprocessingexception") || msg.contains("jsonparse") || msg.contains("readtree")) {
+                throw new RuntimeException("La IA no pudo generar una rutina válida en este momento. Intente de nuevo.");
+            }
+            if (msg.contains("machine not found") || msg.contains("no machine")) {
+                throw new RuntimeException("Algunos equipos de la rutina no están registrados en el sistema.");
+            }
+            throw new RuntimeException("No se pudo guardar la rutina generada. Intente de nuevo más tarde.");
         }
     }
 }
