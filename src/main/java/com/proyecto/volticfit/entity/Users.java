@@ -34,7 +34,7 @@ public class Users {
     @Column(name = "telefono")
     private Long phone;
 
-    @Column(name = "contraseña")
+    @Column(name = "contrasena")
     private String password;
 
     @ManyToOne(fetch = FetchType.EAGER)
