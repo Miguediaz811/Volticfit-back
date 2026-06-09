@@ -16,7 +16,7 @@ import lombok.Data;
 
 
 @Entity
-@Table(name = "mantenimiento")
+@Table(name = "Mantenimiento")
 @Data
 public class MachineMaintenance {
 

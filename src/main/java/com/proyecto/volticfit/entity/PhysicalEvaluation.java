@@ -20,7 +20,7 @@ import lombok.Data;
  */
 @Entity
 @Data
-@Table(name = "evaluacion_fisica")
+@Table(name = "EvaluacionFisica")
 public class PhysicalEvaluation {
     
     @Id
