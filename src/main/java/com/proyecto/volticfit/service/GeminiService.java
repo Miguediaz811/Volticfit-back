@@ -26,7 +26,7 @@ public class GeminiService {
 
     // Para el Chatbot (Dejamos el 2.5 lite que es súper rápido si te lo acepta, o si da problemas usa 1.5-flash)
     private static final String CHAT_URL =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=";
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=";
 
     // Para las Rutinas (Cambiamos al 1.5-flash o 2.0-flash que no fallan con 404 y son unos tanques procesando JSON)
     private static final String ROUTINE_URL =
