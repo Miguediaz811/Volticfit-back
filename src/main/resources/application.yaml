@@ -1,5 +1,15 @@
 server:
   port: 9090
+  tomcat:
+    threads:
+      max: 200
+      # Esta es la propiedad correcta para versiones modernas de Spring Boot:
+      connection-timeout: 120s
+
+gemini:
+  api:
+    key: ${GEMINI_API_KEY:REMOVED}
+
 
 spring:
   datasource:
@@ -7,6 +17,9 @@ spring:
     username: root
     password:
     driver-class-name: com.mysql.cj.jdbc.Driver
+    mvc:
+    async:
+      request-timeout: 120000
 
   jpa:
     hibernate:
@@ -16,6 +29,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
   mail:
     host: smtp.gmail.com

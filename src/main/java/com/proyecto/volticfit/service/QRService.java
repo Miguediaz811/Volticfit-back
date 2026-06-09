@@ -5,11 +5,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Service;
 
-import com.proyecto.volticfit.dto.QrValidationResponseDTO;
+import com.proyecto.volticfit.dto.QrCode.QrValidationResponseDTO;
 
 import lombok.RequiredArgsConstructor;
 
-
+/**
+ * Servicio para gestionar la generación y validación de códigos QR.
+ */
 @Service
 @RequiredArgsConstructor
 public class QRService {

@@ -38,5 +38,12 @@ public class Sanction {
  
     @Column(name = "estado")
     private Boolean state;
+
+    /**
+     * Clasificación de la sanción: leve, moderada o grave.
+     * Mapea el ENUM del SQL: ENUM('leve','moderada','grave')
+     */
+    @Column(name = "clasificacion", length = 10)
+    private String clasificacion;
     
 }

@@ -30,12 +30,22 @@ import lombok.extern.log4j.Log4j2;
 @RequiredArgsConstructor
 public class AuthService {
  
+    // Definir el rol predeterminado para los nuevos usuarios registrados
     private static final String DEFAULT_ROLE = "aprendiz";
  
+    // Inyectar el codificador de contraseñas para manejar el hashing de las contraseñas de los usuarios
     private final PasswordEncoder passwordEncoder;
+
+    // Inyectar el repositorio de usuarios para manejar las operaciones relacionadas con los usuarios
     private final UsersRepository usersRepository;
+    
+    // Inyectar el repositorio de roles para asignar el rol predeterminado a los nuevos usuarios
     private final RoleRepository rolRepository;
+
+    // Inyectar el servicio de JWT para manejar la generación y validación de tokens
     private final JwtService jwtService;
+
+    // Inyectar el servicio de restablecimiento de contraseña para manejar las operaciones relacionadas con la recuperación de contraseñas
     private final PasswordResetService passwordResetService;
  
     /**
@@ -50,7 +60,7 @@ public class AuthService {
         }
  
         Role defaultRole = rolRepository.findByName(DEFAULT_ROLE)
-                .orElseThrow(() -> new RuntimeException("Default role not found"));
+                .orElseThrow(() -> new RuntimeException("No se encontro el rol inicial"));
  
         Users user = new Users();
         user.setNames(request.getNames());
@@ -80,7 +90,7 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
  
         if (!user.getState()) {
-            throw new RuntimeException("This account is inactive");
+            throw new RuntimeException("Tu cuenta esta inactiva");
         }
  
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
@@ -155,12 +165,12 @@ public class AuthService {
     }
 
     /**
-     * Returns all active users.
+     * Returns all users, including inactive accounts.
      *
-     * @return list of active users
+     * @return list of users
      */
     public List<Users> getAllUsers() {
-        return usersRepository.findByStateTrue();
+        return usersRepository.findAll();
     }
 }
  

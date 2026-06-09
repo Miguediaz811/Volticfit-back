@@ -21,7 +21,7 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import com.proyecto.volticfit.dto.Attendance.AttendanceListResponseDTO;
 import com.proyecto.volticfit.dto.Attendance.AttendanceResponseDTO;
 import com.proyecto.volticfit.dto.Attendance.ManualAttendanceRequestDTO;
-import com.proyecto.volticfit.dto.QrCode.QrResponseDTO;
+import com.proyecto.volticfit.dto.QrCode.QrGeneratedResponseDTO;
 import com.proyecto.volticfit.entity.Attendance;
 import com.proyecto.volticfit.entity.QrCode;
 import com.proyecto.volticfit.entity.Sanction;
@@ -44,12 +44,22 @@ import lombok.extern.log4j.Log4j2;
 @RequiredArgsConstructor
 public class AttendanceService {
 
+    // QR code image size
     private static final int QR_SIZE = 300;
 
+    // Repository for users to manage user data and lookups
     private final UsersRepository usersRepository;
+
+    // Repository for QR codes to manage generation and validation
     private final QrCodeRepository qrCodeRepository;
+
+    // Repository for attendance records to manage entry and exit times
     private final AttendanceRepository attendanceRepository;
+
+    // Repository for user sanctions to check active sanctions during attendance registration
     private final UserSanctionRepository userSanctionRepository;
+
+    // JWT service for validating tokens in attendance history retrieval
     private final JwtService jwtService;
 
     /**
@@ -60,9 +70,9 @@ public class AttendanceService {
      * @return QrResponseDTO with base64 image and token
      */
     @Transactional
-    public QrResponseDTO generateQR(Long userId) {
+    public QrGeneratedResponseDTO generateQR(Long userId) {
         Users user = usersRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("No se encontro el usuario"));
 
         // Check if user already has an active QR
         Optional<QrCode> existingQR = qrCodeRepository.findByUserIdUserAndUsed(userId, false);
@@ -92,10 +102,10 @@ public class AttendanceService {
     @Transactional
     public AttendanceResponseDTO processQRScan(String token) {
         QrCode qrCode = qrCodeRepository.findByToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid QR code"));
+                .orElseThrow(() -> new RuntimeException("El codigo QR no es valido"));
 
         if (qrCode.getUsed()) {
-            throw new RuntimeException("This QR code has already been used");
+            throw new RuntimeException("Este codigo QR ya fue utilizado");
         }
 
         Users user = qrCode.getUser();
@@ -125,7 +135,7 @@ public class AttendanceService {
     @Transactional
     public AttendanceResponseDTO processManualAttendance(ManualAttendanceRequestDTO request) {
         Users user = usersRepository.findByDocNum(request.getDocNumber())
-                .orElseThrow(() -> new RuntimeException("User not found with that document number"));
+                .orElseThrow(() -> new RuntimeException("No se encontro un usuario con ese documento"));
 
         // Check if user has open attendance (EXIT)
         Optional<Attendance> openAttendance = attendanceRepository
@@ -135,7 +145,7 @@ public class AttendanceService {
             attendance.setExitTime(LocalDateTime.now());
             attendanceRepository.save(attendance);
             log.info("Manual exit registered for user: {}", user.getIdUser());
-            return buildValidResponse(user, "EXIT_REGISTERED", "Exit registered successfully");
+            return buildValidResponse(user, "EXIT_REGISTERED", "Salida registrada correctamente");
         }
 
         // Validate sanction
@@ -152,7 +162,7 @@ public class AttendanceService {
         attendanceRepository.save(attendance);
 
         log.info("Manual entry registered for user: {}", user.getIdUser());
-        return buildValidResponse(user, "VALID", "Welcome to the gym. Enjoy your workout!");
+        return buildValidResponse(user, "VALID", "Entrada registrada correctamente");
     }
 
     /**
@@ -163,8 +173,8 @@ public class AttendanceService {
      */
     public AttendanceResponseDTO findUserByDoc(String docNumber) {
         Users user = usersRepository.findByDocNum(docNumber)
-                .orElseThrow(() -> new RuntimeException("User not found with that document number"));
-        return buildValidResponse(user, "FOUND", "User found");
+                .orElseThrow(() -> new RuntimeException("No se encontro un usuario con ese documento"));
+        return buildValidResponse(user, "FOUND", "Usuario encontrado");
     }
 
     /**
@@ -179,13 +189,13 @@ public class AttendanceService {
         String token = authHeader.replace("Bearer ", "");
 
         if (!jwtService.isTokenValid(token)) {
-            throw new RuntimeException("Invalid token");
+            throw new RuntimeException("La sesion ya no es valida");
         }
 
         String email = jwtService.extractEmail(token);
 
         Users user = usersRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("No se encontro el usuario"));
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("entryTime").descending());
 
@@ -210,7 +220,7 @@ public class AttendanceService {
         attendance.setRegistrationType("QR");
         attendanceRepository.save(attendance);
         log.info("QR entry registered for user: {}", user.getIdUser());
-        return buildValidResponse(user, "VALID", "Welcome to the gym. Enjoy your workout!");
+        return buildValidResponse(user, "VALID", "Entrada registrada correctamente");
     }
 
     private AttendanceResponseDTO registerExit(Attendance attendance, QrCode qrCode, Users user) {
@@ -219,7 +229,7 @@ public class AttendanceService {
         qrCode.setUsed(true);
         qrCodeRepository.save(qrCode);
         log.info("QR exit registered for user: {}", user.getIdUser());
-        return buildValidResponse(user, "EXIT_REGISTERED", "Exit registered. See you next time!");
+        return buildValidResponse(user, "EXIT_REGISTERED", "Salida registrada correctamente");
     }
 
     private Optional<Sanction> getActiveSanction(Long userId) {
@@ -249,24 +259,59 @@ public class AttendanceService {
 
     private AttendanceResponseDTO buildSanctionResponse(Users user, Sanction sanction) {
         AttendanceResponseDTO response = buildValidResponse(user, "INVALID_SANCTION",
-                "Access blocked. Active sanction found.");
+                "Acceso bloqueado por sancion activa");
         response.setSanctionStartDate(sanction.getStartDate().toString());
         response.setSanctionEndDate(sanction.getEndDate().toString());
         response.setSanctionDescription(sanction.getDescription());
         return response;
     }
 
-    private QrResponseDTO buildQRResponse(String token) {
+    /**
+     * Returns all attendance records for all users (admin only), optionally filtered by date range.
+     *
+     * @param startDate optional start date filter (inclusive)
+     * @param endDate   optional end date filter (inclusive)
+     * @return list of attendance records with user info
+     */
+    public List<AttendanceListResponseDTO> getAllAttendance(LocalDate startDate, LocalDate endDate) {
+        return attendanceRepository.findAll().stream()
+                .filter(att -> {
+                    if (startDate == null && endDate == null) return true;
+                    LocalDate entryDate = att.getEntryTime() != null ? att.getEntryTime().toLocalDate() : null;
+                    if (entryDate == null) return false;
+                    if (startDate != null && entryDate.isBefore(startDate)) return false;
+                    if (endDate != null && entryDate.isAfter(endDate)) return false;
+                    return true;
+                })
+                .sorted((a, b) -> b.getEntryTime().compareTo(a.getEntryTime()))
+                .map(att -> {
+                    Users user = att.getUser();
+                    String fullName = user == null ? "-"
+                            : ((user.getNames() == null ? "" : user.getNames()) + " "
+                               + (user.getSurnames() == null ? "" : user.getSurnames())).trim();
+                    return new AttendanceListResponseDTO(
+                            att.getIdAttendance(),
+                            fullName,
+                            user == null ? "-" : user.getDocNum(),
+                            att.getEntryTime(),
+                            att.getExitTime(),
+                            att.getRegistrationType()
+                    );
+                })
+                .toList();
+    }
+
+    private QrGeneratedResponseDTO buildQRResponse(String token) {
         try {
             QRCodeWriter qrCodeWriter = new QRCodeWriter();
             BitMatrix bitMatrix = qrCodeWriter.encode(token, BarcodeFormat.QR_CODE, QR_SIZE, QR_SIZE);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             MatrixToImageWriter.writeToStream(bitMatrix, "PNG", outputStream);
             String base64 = Base64.getEncoder().encodeToString(outputStream.toByteArray());
-            return new QrResponseDTO("data:image/png;base64," + base64, token);
+            return new QrGeneratedResponseDTO("data:image/png;base64," + base64, token);
         } catch (Exception e) {
             log.error("Error generating QR image: {}", e.getMessage());
-            throw new RuntimeException("Error generating QR code");
+            throw new RuntimeException("No se pudo generar el codigo QR");
         }
     }
 }

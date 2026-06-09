@@ -6,9 +6,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.proyecto.volticfit.dto.QrResponseDTO;
-import com.proyecto.volticfit.dto.QrValidationResponseDTO;
-import com.proyecto.volticfit.service.JwtService;
+import com.proyecto.volticfit.dto.QrCode.QrResponseDTO;
+import com.proyecto.volticfit.dto.QrCode.QrValidationResponseDTO;
 import com.proyecto.volticfit.service.QRService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +21,6 @@ public class QRController {
 
     private final QRService qrService;
 
-    private final JwtService jwtService;
 
         /**
      * Endpoint para generar un código QR dinámico.

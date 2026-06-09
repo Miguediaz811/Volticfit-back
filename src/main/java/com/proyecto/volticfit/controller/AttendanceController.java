@@ -1,9 +1,14 @@
 package com.proyecto.volticfit.controller;
 
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -13,10 +18,10 @@ import com.proyecto.volticfit.dto.Attendance.AttendanceRequestDTO;
 import com.proyecto.volticfit.dto.Attendance.AttendanceResponseDTO;
 import com.proyecto.volticfit.dto.Attendance.AttendanceListResponseDTO;
 import com.proyecto.volticfit.dto.Attendance.ManualAttendanceRequestDTO;
-import com.proyecto.volticfit.dto.QrCode.QrResponseDTO;
+import com.proyecto.volticfit.dto.QrCode.QrGeneratedResponseDTO;
 import com.proyecto.volticfit.service.AttendanceService;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -34,7 +39,7 @@ public class AttendanceController {
      * @return QrResponseDTO with base64 image and token
      */
     @GetMapping("/qr")
-    public ResponseEntity<QrResponseDTO> generateQR(
+    public ResponseEntity<QrGeneratedResponseDTO> generateQR(
             @RequestParam Long userId
     ) {
         return ResponseEntity.ok(attendanceService.generateQR(userId));
@@ -50,7 +55,12 @@ public class AttendanceController {
     public ResponseEntity<AttendanceResponseDTO> scanQR(
             @RequestBody AttendanceRequestDTO request
     ) {
-        return ResponseEntity.ok(attendanceService.processQRScan(request.getToken()));
+        try {
+            return ResponseEntity.ok(attendanceService.processQRScan(request.getToken()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new AttendanceResponseDTO("ERROR", e.getMessage(), null, null, null, null, null, null, null, null));
+        }
     }
  
     /**
@@ -63,7 +73,12 @@ public class AttendanceController {
     public ResponseEntity<AttendanceResponseDTO> manualAttendance(
             @RequestBody ManualAttendanceRequestDTO request
     ) {
-        return ResponseEntity.ok(attendanceService.processManualAttendance(request));
+        try {
+            return ResponseEntity.ok(attendanceService.processManualAttendance(request));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new AttendanceResponseDTO("ERROR", e.getMessage(), null, null, null, null, null, null, null, null));
+        }
     }
  
     /**
@@ -94,5 +109,24 @@ public class AttendanceController {
             @RequestParam(defaultValue = "10") int size
     ) {
         return ResponseEntity.ok(attendanceService.getAttendanceHistory(authHeader, page, size));
+    }
+
+    /**
+     * Returns all attendance records for all users (admin use).
+     * Optionally filtered by startDate and endDate (format: yyyy-MM-dd).
+     */
+    @GetMapping("/all")
+    public ResponseEntity<List<AttendanceListResponseDTO>> getAllAttendance(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            HttpServletRequest httpRequest
+    ) {
+        String role = (String) httpRequest.getAttribute("role");
+        if (!"admin".equalsIgnoreCase(role) && !"instructor".equalsIgnoreCase(role)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        LocalDate start = startDate != null ? LocalDate.parse(startDate) : null;
+        LocalDate end   = endDate   != null ? LocalDate.parse(endDate)   : null;
+        return ResponseEntity.ok(attendanceService.getAllAttendance(start, end));
     }
 }

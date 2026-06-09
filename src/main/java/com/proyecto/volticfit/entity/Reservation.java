@@ -14,6 +14,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/**
+ * Entidad que representa una reserva, incluyendo detalles como la fecha, horas de inicio y fin, y el estado de la reserva.
+ */
 @Entity
 @Data
 @Table(name = "Reserva")

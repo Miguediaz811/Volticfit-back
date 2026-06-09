@@ -1,15 +1,27 @@
 package com.proyecto.volticfit.dto.QrCode;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+/**
+ * DTO utilizado para enviar al cliente la información necesaria
+ * para generar el código QR.
+ */
 public class QrResponseDTO {
 
-    private String qrBase64;
-    
-    private String token;
+    private String qrData;
+
+    /**
+     * Constructor del DTO.
+     *
+     * @param qrData contenido que será representado como QR (URL con token)
+     */
+    public QrResponseDTO(String qrData) {
+        this.qrData = qrData;
+    }
+
+    public String getQrData() {
+        return qrData;
+    }
+
+    public void setQrData(String qrData) {
+        this.qrData = qrData;
+    }
 }
