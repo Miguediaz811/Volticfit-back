@@ -77,6 +77,7 @@ public class PasswordResetService {
                 user.setPassword(passwordEncoder.encode(request.getNewPassword()));
                 usersRepository.save(user);
                 verificationCodes.remove(request.getEmail());
+                emailService.sendPasswordChangedNotification(user.getEmail(), user.getNames());
                 MessageResponseDTO response = new MessageResponseDTO();
                 response.setMessage("Contraseña restaurada exitosamente");
                 return response;

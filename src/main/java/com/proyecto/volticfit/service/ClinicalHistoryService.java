@@ -52,12 +52,13 @@ public class ClinicalHistoryService {
         history.setUser(user);
         history.setDescription(request.getDescription());
         history.setDate(request.getDate());
-        clinicalHistoryRepository.save(history);
+        ClinicalHistory savedHistory = clinicalHistoryRepository.save(history);
 
         log.info("Clinical history created for user: {}", userId);
 
         MessageResponseDTO response = new MessageResponseDTO();
         response.setMessage("Clinical history entry created successfully");
+        response.setId(savedHistory.getIdHistory());
         return response;
     }
 

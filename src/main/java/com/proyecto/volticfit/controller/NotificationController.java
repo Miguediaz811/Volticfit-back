@@ -67,4 +67,10 @@ public class NotificationController {
     public ResponseEntity<?> getBroadcastHistory() {
         return ResponseEntity.ok(notificationService.getBroadcastHistory());
     }
+
+    @GetMapping("/admin/all")
+    @RequiresRole(RoleEnum.ADMIN)
+    public ResponseEntity<?> getAllNotificationsAdmin() {
+        return ResponseEntity.ok(notificationService.getAllNotificationsAdmin());
+    }
 }

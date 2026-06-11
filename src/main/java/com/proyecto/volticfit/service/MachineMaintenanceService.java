@@ -101,7 +101,7 @@ public class MachineMaintenanceService {
                     request.getDescription());
             maintenance.setResponsible(
                     request.getResponsible());
-            maintenance.setState(true);
+            maintenance.setState(request.getDate().isAfter(LocalDate.now()));
 
             maintenanceRepository.save(
                     maintenance);
@@ -139,15 +139,15 @@ public class MachineMaintenanceService {
     getMachineMaintenanceHistory(
             Long idMachine) {
 
-        return maintenanceRepository
-                .findByMachine_IdMachine(idMachine);
+        return refreshExpiredMaintenance(
+                maintenanceRepository.findByMachine_IdMachine(idMachine));
     }
 
     public List<MachineMaintenance> getAllMaintenanceHistory(String requesterRole) {
         if (!"admin".equalsIgnoreCase(requesterRole)) {
             throw new RuntimeException("No tienes permiso para consultar mantenimientos");
         }
-        return maintenanceRepository.findAll();
+        return refreshExpiredMaintenance(maintenanceRepository.findAll());
     }
 
     /**
@@ -157,7 +157,7 @@ public class MachineMaintenanceService {
         if (!"admin".equalsIgnoreCase(requesterRole)) {
             throw new RuntimeException("No tienes permiso para consultar mantenimientos");
         }
-        return maintenanceRepository.findAll().stream()
+        return refreshExpiredMaintenance(maintenanceRepository.findAll()).stream()
                 .filter(m -> {
                     // Excluir registros sin máquina o con nombre "sin maquina"
                     if (m.getMachine() == null) return false;
@@ -176,5 +176,18 @@ public class MachineMaintenanceService {
                     return b.getDate().compareTo(a.getDate());
                 })
                 .toList();
+    }
+
+    @Transactional
+    protected List<MachineMaintenance> refreshExpiredMaintenance(List<MachineMaintenance> records) {
+        LocalDate today = LocalDate.now();
+        records.stream()
+                .filter(m -> Boolean.TRUE.equals(m.getState()))
+                .filter(m -> m.getDate() != null && !m.getDate().isAfter(today))
+                .forEach(m -> {
+                    m.setState(false);
+                    maintenanceRepository.save(m);
+                });
+        return records;
     }
 }

@@ -2,6 +2,7 @@ package com.proyecto.volticfit.controller;
 
 import java.util.List;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -68,5 +69,15 @@ public class MachineController {
             @RequestBody UpdateMachineDTO request) {
 
         return machineService.actualizarMaquina(id, request);
+    }
+
+    @PutMapping("/{id}/inactivar")
+    public MachineResponseDTO inactivar(@PathVariable Long id) {
+        return machineService.inactivarMaquina(id);
+    }
+
+    @DeleteMapping("/{id}")
+    public MachineResponseDTO eliminar(@PathVariable Long id) {
+        return machineService.eliminarMaquina(id);
     }
 }

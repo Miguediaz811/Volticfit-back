@@ -187,4 +187,25 @@ public class PhysicalEvaluationController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
+
+    @Operation(summary = "Mark a physical evaluation as completed")
+    @RequiresRole({ RoleEnum.ADMIN })
+    @PutMapping("/{id}/complete")
+    public ResponseEntity<MessageResponseDTO> completeEvaluation(
+            @PathVariable Long id,
+            HttpServletRequest httpRequest) {
+        try {
+            String role = (String) httpRequest.getAttribute("role");
+            MessageResponseDTO response = evaluationService.completeEvaluation(id, role);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        } catch (Exception e) {
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
 }

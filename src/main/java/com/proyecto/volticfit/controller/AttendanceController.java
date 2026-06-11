@@ -119,6 +119,7 @@ public class AttendanceController {
     public ResponseEntity<List<AttendanceListResponseDTO>> getAllAttendance(
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) Long userId,
             HttpServletRequest httpRequest
     ) {
         String role = (String) httpRequest.getAttribute("role");
@@ -127,6 +128,9 @@ public class AttendanceController {
         }
         LocalDate start = startDate != null ? LocalDate.parse(startDate) : null;
         LocalDate end   = endDate   != null ? LocalDate.parse(endDate)   : null;
+        if (userId != null) {
+            return ResponseEntity.ok(attendanceService.getAllAttendanceByUser(userId, start, end));
+        }
         return ResponseEntity.ok(attendanceService.getAllAttendance(start, end));
     }
 }

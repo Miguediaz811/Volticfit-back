@@ -35,3 +35,4 @@ build/
 
 ### archivos env ###
 .env
+secrets.txt

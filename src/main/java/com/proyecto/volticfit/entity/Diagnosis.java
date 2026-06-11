@@ -19,7 +19,7 @@ import lombok.Data;
  */
 @Entity
 @Data
-@Table(name = "diagnostico")
+@Table(name = "Diagnostico")
 public class Diagnosis {
 
     @Id

@@ -100,7 +100,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
             LoginResponseDTO error = new LoginResponseDTO();
-            error.setMessage(e.getMessage());
+            error.setMessage(readableDatabaseConnectionMessage(e.getMessage()));
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
     }
@@ -239,5 +239,17 @@ public class AuthController {
             HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         return ResponseEntity.ok(authService.changePassword(userId, request));
+    }
+
+    private String readableDatabaseConnectionMessage(String message) {
+        String normalized = message == null ? "" : message.toLowerCase();
+        if (normalized.contains("unable to acquire jdbc connection")
+                || normalized.contains("communications link failure")
+                || normalized.contains("driver has not received any packets")
+                || normalized.contains("connection refused")
+                || normalized.contains("cannot connect")) {
+            return "No se pudo conectar con la base de datos. Verifica que MySQL este encendido y que la configuracion de conexion sea correcta.";
+        }
+        return message;
     }
 }

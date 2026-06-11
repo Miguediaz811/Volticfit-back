@@ -14,7 +14,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -65,6 +67,19 @@ public class NotificationService {
                 })
                 .sorted((a, b) -> b.getNotification().getFechaEnvio().compareTo(a.getNotification().getFechaEnvio()))
                 .map(un -> toModel(un.getNotification(), un.isLeida()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Devuelve todas las notificaciones con datos del destinatario (solo admin).
+     */
+    public List<Notification> getAllNotificationsAdmin() {
+        Map<Long, List<UserNotification>> grouped = userNotificationRepository.findAll().stream()
+                .collect(Collectors.groupingBy(un -> un.getNotification().getId()));
+
+        return grouped.values().stream()
+                .map(this::toAdminModel)
+                .sorted((a, b) -> b.getFechaEnvio().compareTo(a.getFechaEnvio()))
                 .collect(Collectors.toList());
     }
 
@@ -139,5 +154,36 @@ public class NotificationService {
         n.setFechaExpiracion(e.getFechaExpiracion());
         n.setLeida(leida);
         return n;
+    }
+
+    private Notification toAdminModel(List<UserNotification> links) {
+        if (links == null || links.isEmpty()) {
+            return new Notification();
+        }
+
+        UserNotification first = links.get(0);
+        Notification n = toModel(first.getNotification(), links.stream().allMatch(UserNotification::isLeida));
+
+        if (links.size() > 1) {
+            n.setUsuarioDestinoId(null);
+            n.setUsuarioDestinoNombre("Enviada a todos los usuarios");
+            return n;
+        }
+
+        Users user = first.getUser();
+        n.setUsuarioDestinoId(user != null ? user.getIdUser() : null);
+        n.setUsuarioDestinoNombre(user != null ? fullName(user) : "Usuario no disponible");
+        return n;
+    }
+
+    private String fullName(Users user) {
+        List<String> parts = new ArrayList<>();
+        if (user.getNames() != null && !user.getNames().isBlank()) {
+            parts.add(user.getNames());
+        }
+        if (user.getSurnames() != null && !user.getSurnames().isBlank()) {
+            parts.add(user.getSurnames());
+        }
+        return parts.isEmpty() ? "Usuario sin nombre" : String.join(" ", parts);
     }
 }

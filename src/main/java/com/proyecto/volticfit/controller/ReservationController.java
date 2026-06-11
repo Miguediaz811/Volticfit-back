@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyecto.volticfit.dto.MessageResponseDTO;
+import com.proyecto.volticfit.dto.Reservations.CreateFullGymReservationDTO;
 import com.proyecto.volticfit.dto.Reservations.CreateReservationDTO;
 import com.proyecto.volticfit.dto.Reservations.ShiftResponseDTO;
 import com.proyecto.volticfit.entity.Reservation;
@@ -124,6 +125,28 @@ public class ReservationController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
             return ResponseEntity.ok(reservations);
+        } catch (Exception e) {
+            MessageResponseDTO error = new MessageResponseDTO();
+            error.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    @Operation(summary = "Reserve the full gym for a funcionario")
+    @PostMapping("/full-gym")
+    public ResponseEntity<MessageResponseDTO> createFullGymReservation(
+            @Valid @RequestBody CreateFullGymReservationDTO request,
+            HttpServletRequest httpRequest) {
+        try {
+            Long userId = (Long) httpRequest.getAttribute("userId");
+            String role  = (String) httpRequest.getAttribute("role");
+            if (!"funcionario".equalsIgnoreCase(role) && !"admin".equalsIgnoreCase(role)) {
+                MessageResponseDTO error = new MessageResponseDTO();
+                error.setMessage("Solo los funcionarios pueden reservar el gimnasio completo");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+            }
+            MessageResponseDTO response = reservationService.createFullGymReservation(request, userId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
             MessageResponseDTO error = new MessageResponseDTO();
             error.setMessage(e.getMessage());

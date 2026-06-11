@@ -10,6 +10,7 @@ import lombok.Data;
 public class MessageResponseDTO {
     
     private String message;
+    private Long id;
 
     /**
      * Constructor vacío requerido por frameworks como Jackson.
@@ -23,5 +24,10 @@ public class MessageResponseDTO {
      */
     public MessageResponseDTO(String message) {
         this.message = message;
+    }
+
+    public MessageResponseDTO(String message, Long id) {
+        this.message = message;
+        this.id = id;
     }
 }

@@ -17,6 +17,8 @@ import com.proyecto.volticfit.dto.Exercise.CompleteExerciseDTO;
 import com.proyecto.volticfit.dto.Exercise.ExerciseResponseDTO;
 import com.proyecto.volticfit.dto.Routine.RoutineResponseDTO;
 import com.proyecto.volticfit.entity.CompletedExercise;
+import com.proyecto.volticfit.entity.ClinicalHistory;
+import com.proyecto.volticfit.entity.ClinicalHistoryDocument;
 import com.proyecto.volticfit.entity.Diagnosis;
 import com.proyecto.volticfit.entity.Exercise;
 import com.proyecto.volticfit.entity.ExerciseId;
@@ -27,6 +29,8 @@ import com.proyecto.volticfit.entity.UserRoutine;
 import com.proyecto.volticfit.entity.UserRoutineId;
 import com.proyecto.volticfit.entity.Users;
 import com.proyecto.volticfit.repository.CompletedExerciseRepository;
+import com.proyecto.volticfit.repository.ClinicalHistoryDocumentRepository;
+import com.proyecto.volticfit.repository.ClinicalHistoryRepository;
 import com.proyecto.volticfit.repository.DiagnosisRepository;
 import com.proyecto.volticfit.repository.ExerciseRepository;
 import com.proyecto.volticfit.repository.MachineRepository;
@@ -73,6 +77,10 @@ public class RoutineService {
 
     // Repositorio de usuarios para manejar las operaciones relacionadas con los usuarios
     private final UsersRepository usersRepository;
+
+    private final ClinicalHistoryRepository clinicalHistoryRepository;
+
+    private final ClinicalHistoryDocumentRepository clinicalHistoryDocumentRepository;
 
     // Servicio para comunicarse con Gemini AI y generar rutinas personalizadas
     private final GeminiService geminiService;
@@ -128,13 +136,39 @@ public class RoutineService {
     }
 
     /**
+     * Marks as finished (state=false) any active routine older than 28 days for the given user.
+     * Called automatically before retrieving the active routine or the history.
+     *
+     * @param userId the user ID
+     */
+    @Transactional
+    public void expireOldRoutines(Long userId) {
+        Optional<UserRoutine> activeOpt = userRoutineRepository.findByUserIdUserAndStateTrue(userId);
+        if (activeOpt.isPresent()) {
+            UserRoutine ur = activeOpt.get();
+            if (ur.getAssignmentDate() != null) {
+                long days = ChronoUnit.DAYS.between(ur.getAssignmentDate(), LocalDate.now());
+                if (days >= MIN_DAYS_BETWEEN_ROUTINES) {
+                    ur.setState(false);
+                    userRoutineRepository.save(ur);
+                    log.info("Routine {} auto-finalized for user {} after {} days",
+                            ur.getRoutine().getIdRoutine(), userId, days);
+                }
+            }
+        }
+    }
+
+    /**
      * Returns the active routine for a user with exercise completion status.
      *
      * @param userId the user ID
      * @return the active routine with exercises
      */
     public RoutineResponseDTO getActiveRoutine(Long userId) {
+        expireOldRoutines(userId);
+
         UserRoutine userRoutine = userRoutineRepository.findByUserIdUserAndStateTrue(userId)
+                .stream().findFirst()
                 .orElseThrow(() -> new RuntimeException("No active routine found"));
 
         Routine routine = userRoutine.getRoutine();
@@ -166,6 +200,7 @@ public class RoutineService {
      * @return list of user routines
      */
     public List<UserRoutine> getRoutineHistory(Long userId) {
+        expireOldRoutines(userId);
         return userRoutineRepository.findByUserIdUser(userId);
     }
 
@@ -265,6 +300,22 @@ public class RoutineService {
             restrictions.forEach(r -> context.append(r.getDescription()).append(", "));
         }
 
+        List<ClinicalHistory> clinicalHistory = clinicalHistoryRepository.findByUserIdUser(user.getIdUser());
+        if (!clinicalHistory.isEmpty()) {
+            context.append("\nClinical history: ");
+            clinicalHistory.forEach(history -> {
+                context.append(history.getDate()).append(": ")
+                        .append(history.getDescription()).append(". ");
+
+                List<ClinicalHistoryDocument> documents =
+                        clinicalHistoryDocumentRepository.findByClinicalHistoryIdHistory(history.getIdHistory());
+                if (!documents.isEmpty()) {
+                    context.append("Attached documents: ");
+                    documents.forEach(document -> context.append(document.getFileName()).append(", "));
+                }
+            });
+        }
+
         return context.toString();
     }
 
@@ -362,4 +413,4 @@ public class RoutineService {
             throw new RuntimeException("No se pudo guardar la rutina generada. Intente de nuevo más tarde.");
         }
     }
-}
+} 

@@ -14,11 +14,15 @@ import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
 import com.proyecto.volticfit.entity.Attendance;
 import com.proyecto.volticfit.entity.Machine;
+import com.proyecto.volticfit.entity.MachineMaintenance;
 import com.proyecto.volticfit.entity.Sanction;
+import com.proyecto.volticfit.entity.UserSanction;
 import com.proyecto.volticfit.entity.Users;
 import com.proyecto.volticfit.repository.AttendanceRepository;
+import com.proyecto.volticfit.repository.MachineMaintenanceRepository;
 import com.proyecto.volticfit.repository.MachineRepository;
 import com.proyecto.volticfit.repository.SanctionRepository;
+import com.proyecto.volticfit.repository.UserSanctionRepository;
 import com.proyecto.volticfit.repository.UsersRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -37,6 +41,8 @@ public class ExportService {
     private final AttendanceRepository attendanceRepository;
     private final MachineRepository machineRepository;
     private final SanctionRepository sanctionRepository;
+    private final MachineMaintenanceRepository maintenanceRepository;
+    private final UserSanctionRepository userSanctionRepository;
 
     // =====================
     // PDF EXPORTS
@@ -86,7 +92,11 @@ public class ExportService {
      * Exports attendance report as PDF.
      */
     public byte[] exportAttendancePdf() {
-        List<Attendance> attendances = attendanceRepository.findAll();
+        return exportAttendancePdf(null);
+    }
+
+    public byte[] exportAttendancePdf(Long userId) {
+        List<Attendance> attendances = filterAttendance(userId);
         try {
             Document document = new Document();
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -164,7 +174,11 @@ public class ExportService {
      * Exports sanctions report as PDF.
      */
     public byte[] exportSanctionsPdf() {
-        List<Sanction> sanctions = sanctionRepository.findAll();
+        return exportSanctionsPdf(null);
+    }
+
+    public byte[] exportSanctionsPdf(Long userId) {
+        List<UserSanction> sanctions = filterUserSanctions(userId);
         try {
             Document document = new Document();
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -177,12 +191,15 @@ public class ExportService {
                     FontFactory.getFont(FontFactory.HELVETICA, 10)));
             document.add(Chunk.NEWLINE);
 
-            PdfPTable table = new PdfPTable(5);
+            PdfPTable table = new PdfPTable(6);
             table.setWidthPercentage(100);
-            addPdfHeader(table, "ID", "Tipo", "Descripción", "Fecha Inicio", "Fecha Fin");
+            addPdfHeader(table, "Usuario", "Documento", "Tipo", "Descripción", "Fecha Inicio", "Fecha Fin");
 
-            for (Sanction s : sanctions) {
-                table.addCell(String.valueOf(s.getIdSanction()));
+            for (UserSanction us : sanctions) {
+                Sanction s = us.getSanction();
+                Users u = us.getUser();
+                table.addCell(u != null ? fullName(u) : "-");
+                table.addCell(u != null && u.getDocNum() != null ? u.getDocNum() : "-");
                 table.addCell(s.getType());
                 table.addCell(s.getDescription() != null ? s.getDescription() : "-");
                 table.addCell(s.getStartDate() != null ? s.getStartDate().toString() : "-");
@@ -238,7 +255,11 @@ public class ExportService {
      * Exports attendance report as Excel.
      */
     public byte[] exportAttendanceExcel() {
-        List<Attendance> attendances = attendanceRepository.findAll();
+        return exportAttendanceExcel(null);
+    }
+
+    public byte[] exportAttendanceExcel(Long userId) {
+        List<Attendance> attendances = filterAttendance(userId);
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Asistencia");
             createExcelHeader(sheet, "Usuario", "Hora de Entrada", "Hora de Salida", "Tipo");
@@ -296,19 +317,26 @@ public class ExportService {
      * Exports sanctions report as Excel.
      */
     public byte[] exportSanctionsExcel() {
-        List<Sanction> sanctions = sanctionRepository.findAll();
+        return exportSanctionsExcel(null);
+    }
+
+    public byte[] exportSanctionsExcel(Long userId) {
+        List<UserSanction> sanctions = filterUserSanctions(userId);
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Sanciones");
-            createExcelHeader(sheet, "ID", "Tipo", "Descripción", "Fecha Inicio", "Fecha Fin");
+            createExcelHeader(sheet, "Usuario", "Documento", "Tipo", "Descripción", "Fecha Inicio", "Fecha Fin");
 
             int rowNum = 1;
-            for (Sanction s : sanctions) {
+            for (UserSanction us : sanctions) {
+                Sanction s = us.getSanction();
+                Users u = us.getUser();
                 Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(s.getIdSanction());
-                row.createCell(1).setCellValue(s.getType());
-                row.createCell(2).setCellValue(s.getDescription() != null ? s.getDescription() : "-");
-                row.createCell(3).setCellValue(s.getStartDate() != null ? s.getStartDate().toString() : "-");
-                row.createCell(4).setCellValue(s.getEndDate() != null ? s.getEndDate().toString() : "-");
+                row.createCell(0).setCellValue(u != null ? fullName(u) : "-");
+                row.createCell(1).setCellValue(u != null && u.getDocNum() != null ? u.getDocNum() : "-");
+                row.createCell(2).setCellValue(s.getType());
+                row.createCell(3).setCellValue(s.getDescription() != null ? s.getDescription() : "-");
+                row.createCell(4).setCellValue(s.getStartDate() != null ? s.getStartDate().toString() : "-");
+                row.createCell(5).setCellValue(s.getEndDate() != null ? s.getEndDate().toString() : "-");
             }
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -320,6 +348,100 @@ public class ExportService {
             log.error("Error generando Excel de sanciones: {}", e.getMessage());
             throw new RuntimeException("Error generando reporte Excel");
         }
+    }
+
+    /**
+     * Exports maintenance report as PDF.
+     */
+    public byte[] exportMaintenancePdf() {
+        List<MachineMaintenance> records = maintenanceRepository.findAll();
+        try {
+            Document document = new Document();
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            PdfWriter.getInstance(document, out);
+            document.open();
+
+            document.add(new Paragraph("Volticfit - Reporte de Mantenimiento",
+                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16)));
+            document.add(new Paragraph("Generado: " + LocalDate.now(),
+                    FontFactory.getFont(FontFactory.HELVETICA, 10)));
+            document.add(Chunk.NEWLINE);
+
+            PdfPTable table = new PdfPTable(6);
+            table.setWidthPercentage(100);
+            addPdfHeader(table, "Equipo", "Tipo", "Descripción", "Fecha", "Responsable", "Estado");
+
+            for (MachineMaintenance m : records) {
+                table.addCell(m.getMachine() != null ? m.getMachine().getName() : "-");
+                table.addCell(m.getType() != null ? m.getType() : "-");
+                table.addCell(m.getDescription() != null ? m.getDescription() : "-");
+                table.addCell(m.getDate() != null ? m.getDate().toString() : "-");
+                table.addCell(m.getResponsible() != null ? m.getResponsible() : "-");
+                table.addCell(Boolean.TRUE.equals(m.getState()) ? "Activo" : "Cerrado");
+            }
+
+            document.add(table);
+            document.close();
+            log.info("Reporte PDF de mantenimiento generado");
+            return out.toByteArray();
+
+        } catch (DocumentException e) {
+            log.error("Error generando PDF de mantenimiento: {}", e.getMessage());
+            throw new RuntimeException("Error generando reporte PDF de mantenimiento");
+        }
+    }
+
+    /**
+     * Exports maintenance report as Excel.
+     */
+    public byte[] exportMaintenanceExcel() {
+        List<MachineMaintenance> records = maintenanceRepository.findAll();
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Mantenimiento");
+            createExcelHeader(sheet, "Equipo", "Tipo", "Descripción", "Fecha", "Responsable", "Estado");
+
+            int rowNum = 1;
+            for (MachineMaintenance m : records) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(m.getMachine() != null ? m.getMachine().getName() : "-");
+                row.createCell(1).setCellValue(m.getType() != null ? m.getType() : "-");
+                row.createCell(2).setCellValue(m.getDescription() != null ? m.getDescription() : "-");
+                row.createCell(3).setCellValue(m.getDate() != null ? m.getDate().toString() : "-");
+                row.createCell(4).setCellValue(m.getResponsible() != null ? m.getResponsible() : "-");
+                row.createCell(5).setCellValue(Boolean.TRUE.equals(m.getState()) ? "Activo" : "Cerrado");
+            }
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+            log.info("Reporte Excel de mantenimiento generado");
+            return out.toByteArray();
+
+        } catch (IOException e) {
+            log.error("Error generando Excel de mantenimiento: {}", e.getMessage());
+            throw new RuntimeException("Error generando reporte Excel de mantenimiento");
+        }
+    }
+
+    /**
+     * Exports maintenance report as CSV.
+     */
+    public byte[] exportMaintenanceCsv() {
+        List<MachineMaintenance> records = maintenanceRepository.findAll();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        PrintWriter writer = new PrintWriter(out);
+        writer.println("Equipo,Tipo,Descripción,Fecha,Responsable,Estado");
+        for (MachineMaintenance m : records) {
+            writer.printf("%s,%s,%s,%s,%s,%s%n",
+                    m.getMachine() != null ? m.getMachine().getName() : "-",
+                    m.getType() != null ? m.getType() : "-",
+                    m.getDescription() != null ? m.getDescription() : "-",
+                    m.getDate() != null ? m.getDate().toString() : "-",
+                    m.getResponsible() != null ? m.getResponsible() : "-",
+                    Boolean.TRUE.equals(m.getState()) ? "Activo" : "Cerrado");
+        }
+        writer.flush();
+        log.info("Reporte CSV de mantenimiento generado");
+        return out.toByteArray();
     }
 
     // =====================
@@ -420,5 +542,26 @@ public class ExportService {
         for (int i = 0; i < headers.length; i++) {
             headerRow.createCell(i).setCellValue(headers[i]);
         }
+    }
+
+    private List<Attendance> filterAttendance(Long userId) {
+        return attendanceRepository.findAll().stream()
+                .filter(attendance -> userId == null
+                        || (attendance.getUser() != null && userId.equals(attendance.getUser().getIdUser())))
+                .toList();
+    }
+
+    private List<UserSanction> filterUserSanctions(Long userId) {
+        return userSanctionRepository.findAll().stream()
+                .filter(userSanction -> userId == null
+                        || (userSanction.getUser() != null && userId.equals(userSanction.getUser().getIdUser())))
+                .toList();
+    }
+
+    private String fullName(Users user) {
+        String names = user.getNames() != null ? user.getNames() : "";
+        String surnames = user.getSurnames() != null ? user.getSurnames() : "";
+        String fullName = (names + " " + surnames).trim();
+        return fullName.isBlank() ? "-" : fullName;
     }
 }

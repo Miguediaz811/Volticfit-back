@@ -41,8 +41,8 @@ public class ExportController {
     @Operation(summary = "Export attendance report as PDF - ADMIN only")
     @GetMapping("/pdf/attendance")
     @RequiresRole(RoleEnum.ADMIN)
-    public ResponseEntity<byte[]> exportAttendancePdf() {
-        return buildPdfResponse(exportService.exportAttendancePdf(), "attendance-report.pdf");
+    public ResponseEntity<byte[]> exportAttendancePdf(@RequestParam(required = false) Long userId) {
+        return buildPdfResponse(exportService.exportAttendancePdf(userId), "attendance-report.pdf");
     }
 
     @Operation(summary = "Export machines report as PDF - ADMIN only")
@@ -55,8 +55,15 @@ public class ExportController {
     @Operation(summary = "Export sanctions report as PDF - ADMIN only")
     @GetMapping("/pdf/sanctions")
     @RequiresRole(RoleEnum.ADMIN)
-    public ResponseEntity<byte[]> exportSanctionsPdf() {
-        return buildPdfResponse(exportService.exportSanctionsPdf(), "sanctions-report.pdf");
+    public ResponseEntity<byte[]> exportSanctionsPdf(@RequestParam(required = false) Long userId) {
+        return buildPdfResponse(exportService.exportSanctionsPdf(userId), "sanctions-report.pdf");
+    }
+
+    @Operation(summary = "Export maintenance report as PDF - ADMIN only")
+    @GetMapping("/pdf/maintenance")
+    @RequiresRole(RoleEnum.ADMIN)
+    public ResponseEntity<byte[]> exportMaintenancePdf() {
+        return buildPdfResponse(exportService.exportMaintenancePdf(), "maintenance-report.pdf");
     }
 
     // =====================
@@ -73,8 +80,8 @@ public class ExportController {
     @Operation(summary = "Export attendance report as Excel - ADMIN only")
     @GetMapping("/excel/attendance")
     @RequiresRole(RoleEnum.ADMIN)
-    public ResponseEntity<byte[]> exportAttendanceExcel() {
-        return buildExcelResponse(exportService.exportAttendanceExcel(), "attendance-report.xlsx");
+    public ResponseEntity<byte[]> exportAttendanceExcel(@RequestParam(required = false) Long userId) {
+        return buildExcelResponse(exportService.exportAttendanceExcel(userId), "attendance-report.xlsx");
     }
 
     @Operation(summary = "Export machines report as Excel - ADMIN only")
@@ -87,8 +94,15 @@ public class ExportController {
     @Operation(summary = "Export sanctions report as Excel - ADMIN only")
     @GetMapping("/excel/sanctions")
     @RequiresRole(RoleEnum.ADMIN)
-    public ResponseEntity<byte[]> exportSanctionsExcel() {
-        return buildExcelResponse(exportService.exportSanctionsExcel(), "sanctions-report.xlsx");
+    public ResponseEntity<byte[]> exportSanctionsExcel(@RequestParam(required = false) Long userId) {
+        return buildExcelResponse(exportService.exportSanctionsExcel(userId), "sanctions-report.xlsx");
+    }
+
+    @Operation(summary = "Export maintenance report as Excel - ADMIN only")
+    @GetMapping("/excel/maintenance")
+    @RequiresRole(RoleEnum.ADMIN)
+    public ResponseEntity<byte[]> exportMaintenanceExcel() {
+        return buildExcelResponse(exportService.exportMaintenanceExcel(), "maintenance-report.xlsx");
     }
 
     // =====================
@@ -121,6 +135,13 @@ public class ExportController {
     @RequiresRole(RoleEnum.ADMIN)
     public ResponseEntity<byte[]> exportSanctionsCsv() {
         return buildCsvResponse(exportService.exportSanctionsCsv(), "sanctions-report.csv");
+    }
+
+    @Operation(summary = "Export maintenance report as CSV - ADMIN only")
+    @GetMapping("/csv/maintenance")
+    @RequiresRole(RoleEnum.ADMIN)
+    public ResponseEntity<byte[]> exportMaintenanceCsv() {
+        return buildCsvResponse(exportService.exportMaintenanceCsv(), "maintenance-report.csv");
     }
 
     // =====================
