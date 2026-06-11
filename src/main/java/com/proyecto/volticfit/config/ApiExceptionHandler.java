@@ -3,8 +3,10 @@ package com.proyecto.volticfit.config;
 import java.util.stream.Collectors;
 
 import org.hibernate.exception.JDBCConnectionException;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -35,10 +37,10 @@ public class ApiExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-    @ExceptionHandler(JDBCConnectionException.class)
-    public ResponseEntity<MessageResponseDTO> handleJdbcConnection(JDBCConnectionException ex) {
+    @ExceptionHandler({ JDBCConnectionException.class, DataAccessResourceFailureException.class, CannotCreateTransactionException.class })
+    public ResponseEntity<MessageResponseDTO> handleJdbcConnection(Exception ex) {
         MessageResponseDTO response = new MessageResponseDTO();
-        response.setMessage("Error de conexión con la base de datos. Intente más tarde.");
+        response.setMessage("No se pudo conectar con la base de datos. Verifica que MySQL este encendido y que la configuracion de conexion sea correcta.");
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
     }
 
@@ -63,8 +65,8 @@ public class ApiExceptionHandler {
         if (errorMsg.contains("access denied")) {
             return "Error: Acceso denegado a la base de datos.";
         }
-        if (errorMsg.contains("connection refused") || errorMsg.contains("cannot connect")) {
-            return "Error: No se puede conectar a la base de datos. Intente más tarde.";
+        if (errorMsg.contains("unable to acquire jdbc connection") || errorMsg.contains("communications link failure") || errorMsg.contains("driver has not received any packets") || errorMsg.contains("connection refused") || errorMsg.contains("cannot connect")) {
+            return "No se pudo conectar con la base de datos. Verifica que MySQL este encendido y que la configuracion de conexion sea correcta.";
         }
         if (errorMsg.contains("duplicate entry")) {
             return "Error: Este registro ya existe en el sistema.";

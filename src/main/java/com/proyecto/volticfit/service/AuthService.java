@@ -47,6 +47,8 @@ public class AuthService {
 
     // Inyectar el servicio de restablecimiento de contraseña para manejar las operaciones relacionadas con la recuperación de contraseñas
     private final PasswordResetService passwordResetService;
+
+    private final EmailService emailService;
  
     /**
      * Registers a new user with the default role.
@@ -137,6 +139,7 @@ public class AuthService {
  
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         usersRepository.save(user);
+        emailService.sendPasswordChangedNotification(user.getEmail(), user.getNames());
  
         MessageResponseDTO response = new MessageResponseDTO();
         response.setMessage("Contraseña actualizada correctamente");

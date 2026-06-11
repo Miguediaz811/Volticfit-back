@@ -64,6 +64,7 @@ public class AppConstants {
         "            <span style=\"font-size:42px;font-weight:900;letter-spacing:12px;color:#f5a623;\">%s</span>" +
         "          </div>" +
         "          <p style=\"color:#aaaaaa;font-size:13px;margin:0 0 24px;\">Este código expirará en <strong style=\"color:#ffffff;\">%d minutos</strong>. Si no solicitaste este cambio, puedes ignorar este mensaje con tranquilidad.</p>" +
+        "          <p style=\"color:#f5a623;font-size:13px;font-weight:bold;margin:0 0 24px;\">Si no ves este correo en tu bandeja de entrada, revisa tambien la carpeta de spam o correo no deseado.</p>" +
         "          <div style=\"background:#2a2a2a;border-radius:8px;padding:14px 18px;border-left:4px solid #f5a623;\">" +
         "            <p style=\"color:#aaa;font-size:12px;margin:0;\">⚠️ Por seguridad, nunca compartas este código con nadie. VolticFit jamás te lo pedirá.</p>" +
         "          </div>" +
@@ -84,7 +85,8 @@ public class AppConstants {
     public static final String RECOVERY_BODY_TEMPLATE =
         "Hola,\n\nHas solicitado restablecer tu contraseña en Volticfit. " +
         "Haz clic en el siguiente enlace para continuar:\n\n%s/auth/reset-password?token=%s" +
-        "\n\nEste enlace expirará en %d minutos. Si no fuiste tú, ignora este mensaje.";
+        "\n\nEste enlace expirara en %d minutos. Si no fuiste tu, ignora este mensaje." +
+        "\n\nSi no ves este correo en tu bandeja de entrada, revisa tambien spam o correo no deseado.";
 
     /**
      * Template for 6-digit code recovery email.
@@ -92,7 +94,8 @@ public class AppConstants {
      */
     public static final String RECOVERY_CODE_TEMPLATE =
         "Hola,\n\nTu código de recuperación de contraseña es:\n\n%s" +
-        "\n\nEste código expirará en %d minutos. Si no fuiste tú, ignora este mensaje.";
+        "\n\nEste codigo expirara en %d minutos. Si no fuiste tu, ignora este mensaje." +
+        "\n\nSi no ves este correo en tu bandeja de entrada, revisa tambien spam o correo no deseado.";
  
     /**
      * Initializes static variables after Spring injects @Value fields.

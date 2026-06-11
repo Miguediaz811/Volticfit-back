@@ -16,6 +16,8 @@ public class Notification {
 
     private Long usuarioDestinoId;
 
+    private String usuarioDestinoNombre;
+
     private boolean leida = false;
 
     private LocalDateTime fechaEnvio = LocalDateTime.now();

@@ -135,7 +135,7 @@ public class PhysicalEvaluationService {
      * @return list of all evaluations
      */
     public List<PhysicalEvaluation> getAllEvaluations() {
-        return evaluationRepository.findAll();
+        return refreshPastEvaluations(evaluationRepository.findAll());
     }
 
     /**
@@ -144,7 +144,7 @@ public class PhysicalEvaluationService {
      * @return list of evaluations
      */
     public List<PhysicalEvaluation> getUserEvaluations(Long userId) {
-        List<PhysicalEvaluation> evaluations = evaluationRepository.findByUserIdUser(userId);
+        List<PhysicalEvaluation> evaluations = refreshPastEvaluations(evaluationRepository.findByUserIdUser(userId));
         if (evaluations.isEmpty()) {
             log.info("No evaluations found for user: {}", userId);
         }
@@ -175,8 +175,8 @@ public class PhysicalEvaluationService {
             throw new RuntimeException("No tienes permiso para reprogramar esta evaluacion");
         }
  
-        if ("cancelada".equals(evaluation.getStatus())) {
-            throw new RuntimeException("No se puede reprogramar una evaluacion cancelada");
+        if ("cancelada".equals(evaluation.getStatus()) || "realizada".equals(evaluation.getStatus())) {
+            throw new RuntimeException("Solo se pueden reprogramar evaluaciones pendientes");
         }
  
         if (!SHIFT_START_TIMES.contains(request.getStartTime())) {
@@ -229,6 +229,10 @@ public class PhysicalEvaluationService {
             throw new RuntimeException("No tienes permiso para cancelar esta evaluacion");
         }
  
+        if ("realizada".equals(evaluation.getStatus())) {
+            throw new RuntimeException("No se puede cancelar una evaluacion ya realizada");
+        }
+
         if ("cancelada".equals(evaluation.getStatus())) {
             throw new RuntimeException("La evaluacion ya esta cancelada");
         }
@@ -241,6 +245,40 @@ public class PhysicalEvaluationService {
         MessageResponseDTO response = new MessageResponseDTO();
         response.setMessage("Evaluacion cancelada correctamente");
         return response;
+    }
+
+    @Transactional
+    public MessageResponseDTO completeEvaluation(Long id, String requesterRole) {
+        if (!"admin".equalsIgnoreCase(requesterRole)) {
+            throw new RuntimeException("Solo un administrador puede marcar evaluaciones como realizadas");
+        }
+
+        PhysicalEvaluation evaluation = evaluationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Evaluacion no encontrada"));
+
+        if ("cancelada".equals(evaluation.getStatus())) {
+            throw new RuntimeException("No se puede marcar como realizada una evaluacion cancelada");
+        }
+
+        evaluation.setStatus("realizada");
+        evaluationRepository.save(evaluation);
+
+        MessageResponseDTO response = new MessageResponseDTO();
+        response.setMessage("Evaluacion marcada como realizada");
+        return response;
+    }
+
+    @Transactional
+    protected List<PhysicalEvaluation> refreshPastEvaluations(List<PhysicalEvaluation> evaluations) {
+        LocalDate today = LocalDate.now();
+        evaluations.stream()
+                .filter(evaluation -> "programada".equalsIgnoreCase(evaluation.getStatus()))
+                .filter(evaluation -> evaluation.getDate() != null && evaluation.getDate().isBefore(today))
+                .forEach(evaluation -> {
+                    evaluation.setStatus("realizada");
+                    evaluationRepository.save(evaluation);
+                });
+        return evaluations;
     }
 
 }

@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.proyecto.volticfit.dto.MessageResponseDTO;
+import com.proyecto.volticfit.dto.Reservations.CreateFullGymReservationDTO;
 import com.proyecto.volticfit.dto.Reservations.CreateReservationDTO;
 import com.proyecto.volticfit.dto.Reservations.ShiftResponseDTO;
 import com.proyecto.volticfit.entity.Reservation;
@@ -155,6 +156,66 @@ public class ReservationService {
         }
 
         return reservationRepository.findByState(true);
+    }
+
+    /**
+     * Reserva el gimnasio completo para un Funcionario en un rango horario.
+     * Crea una reserva por cada turno estándar que caiga dentro del rango.
+     *
+     * @param request datos de la reserva completa
+     * @param userId  ID del funcionario que reserva
+     * @return mensaje de confirmación
+     */
+    @Transactional
+    public MessageResponseDTO createFullGymReservation(CreateFullGymReservationDTO request, Long userId) {
+        validateCurrentOrFutureDate(request.getReservationDate());
+
+        if (request.getStartTime() == null || request.getEndTime() == null) {
+            throw new RuntimeException("Debes indicar hora de inicio y hora de fin");
+        }
+        if (!request.getEndTime().isAfter(request.getStartTime())) {
+            throw new RuntimeException("La hora de fin debe ser posterior a la hora de inicio");
+        }
+
+        Users user = usersRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("No se encontró el usuario"));
+
+        // Seleccionar los turnos cubiertos por el rango solicitado
+        List<LocalTime> coveredShifts = SHIFT_START_TIMES.stream()
+                .filter(start -> !start.isBefore(request.getStartTime())
+                        && start.isBefore(request.getEndTime()))
+                .toList();
+
+        if (coveredShifts.isEmpty()) {
+            throw new RuntimeException("El rango indicado no cubre ningún turno disponible (08:00 - 18:00)");
+        }
+
+        int created = 0;
+        for (LocalTime shiftStart : coveredShifts) {
+            // Si el turno ya está completamente lleno, lo bloqueamos de igual manera
+            // creando una reserva especial que ocupa todos los cupos restantes
+            int taken = reservationRepository.countByDateAndStartTimeAndState(
+                    request.getReservationDate(), shiftStart, true);
+            int remaining = MAX_SPOTS - taken;
+            for (int i = 0; i < remaining; i++) {
+                Reservation r = new Reservation();
+                r.setUser(user);
+                r.setDate(request.getReservationDate());
+                r.setStartTime(shiftStart);
+                r.setEndTime(shiftStart.plusHours(1));
+                r.setState(true);
+                reservationRepository.save(r);
+            }
+            created += remaining;
+        }
+
+        log.info("Full-gym reservation: funcionario={} fecha={} turnos={} reservas={}",
+                userId, request.getReservationDate(), coveredShifts.size(), created);
+
+        MessageResponseDTO response = new MessageResponseDTO();
+        response.setMessage("Gimnasio reservado correctamente para " + coveredShifts.size()
+                + " turno(s). Motivo: " + (request.getReason() != null ? request.getReason() : "No especificado"));
+        return response;
     }
 
     private void validateCurrentOrFutureDate(LocalDate date) {

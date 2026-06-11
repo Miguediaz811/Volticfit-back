@@ -188,8 +188,17 @@ public class SanctionService {
      * Devuelve todas las sanciones con datos de usuario, filtradas por rango de fechas de inicio.
      */
     public List<SanctionWithUserDTO> getAllWithUserFiltered(LocalDate startDate, LocalDate endDate) {
+        return getAllWithUserFiltered(null, startDate, endDate);
+    }
+
+    /**
+     * Devuelve sanciones filtradas por usuario (opcional) y rango de fechas.
+     */
+    public List<SanctionWithUserDTO> getAllWithUserFiltered(Long userId, LocalDate startDate, LocalDate endDate) {
         return userSanctionRepository.findAll().stream()
                 .filter(us -> {
+                    if (userId != null && (us.getUser() == null || !us.getUser().getIdUser().equals(userId)))
+                        return false;
                     Sanction s = us.getSanction();
                     if (startDate == null && endDate == null) return true;
                     if (s.getStartDate() == null) return false;

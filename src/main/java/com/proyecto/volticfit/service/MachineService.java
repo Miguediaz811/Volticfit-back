@@ -145,6 +145,63 @@ public class MachineService {
         return machineRepository.findAll();
     }
 
+    /**
+     * Inactiva una máquina (state = false).
+     */
+    public MachineResponseDTO inactivarMaquina(Long id) {
+        MachineResponseDTO response = new MachineResponseDTO();
+        try {
+            Machine machine = machineRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Máquina no encontrada"));
+
+            if (Boolean.FALSE.equals(machine.getState())) {
+                response.setStatus("ERROR");
+                response.setMessage("La máquina ya se encuentra inactiva");
+                return response;
+            }
+
+            machine.setState(false);
+            machineRepository.save(machine);
+
+            response.setStatus("SUCCESS");
+            response.setMessage("Máquina inactivada correctamente");
+            log.info("Máquina inactivada: id={}", id);
+        } catch (RuntimeException e) {
+            response.setStatus("ERROR");
+            response.setMessage(e.getMessage());
+        } catch (Exception e) {
+            log.error("Error inactivando máquina {}: {}", id, e.getMessage());
+            response.setStatus("ERROR");
+            response.setMessage("No se pudo inactivar la máquina");
+        }
+        return response;
+    }
+
+    /**
+     * Elimina permanentemente una máquina.
+     */
+    public MachineResponseDTO eliminarMaquina(Long id) {
+        MachineResponseDTO response = new MachineResponseDTO();
+        try {
+            if (!machineRepository.existsById(id)) {
+                response.setStatus("ERROR");
+                response.setMessage("Máquina no encontrada");
+                return response;
+            }
+
+            machineRepository.deleteById(id);
+
+            response.setStatus("SUCCESS");
+            response.setMessage("Máquina eliminada permanentemente");
+            log.info("Máquina eliminada: id={}", id);
+        } catch (Exception e) {
+            log.error("Error eliminando máquina {}: {}", id, e.getMessage());
+            response.setStatus("ERROR");
+            response.setMessage("No se pudo eliminar la máquina. Puede tener registros asociados.");
+        }
+        return response;
+    }
+
     public MachineResponseDTO actualizarMaquina(Long id, UpdateMachineDTO request) {
         MachineResponseDTO response = new MachineResponseDTO();
 

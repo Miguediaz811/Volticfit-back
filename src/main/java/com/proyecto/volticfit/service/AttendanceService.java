@@ -274,8 +274,26 @@ public class AttendanceService {
      * @return list of attendance records with user info
      */
     public List<AttendanceListResponseDTO> getAllAttendance(LocalDate startDate, LocalDate endDate) {
+        return filterAndMapAttendance(null, startDate, endDate);
+    }
+
+    /**
+     * Returns all attendance records for a specific user, optionally filtered by date range.
+     *
+     * @param userId    the user ID to filter by
+     * @param startDate optional start date filter (inclusive)
+     * @param endDate   optional end date filter (inclusive)
+     * @return list of attendance records for the given user
+     */
+    public List<AttendanceListResponseDTO> getAllAttendanceByUser(Long userId, LocalDate startDate, LocalDate endDate) {
+        return filterAndMapAttendance(userId, startDate, endDate);
+    }
+
+    private List<AttendanceListResponseDTO> filterAndMapAttendance(Long userId, LocalDate startDate, LocalDate endDate) {
         return attendanceRepository.findAll().stream()
                 .filter(att -> {
+                    if (userId != null && (att.getUser() == null || !att.getUser().getIdUser().equals(userId)))
+                        return false;
                     if (startDate == null && endDate == null) return true;
                     LocalDate entryDate = att.getEntryTime() != null ? att.getEntryTime().toLocalDate() : null;
                     if (entryDate == null) return false;

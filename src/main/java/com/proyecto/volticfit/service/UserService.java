@@ -32,6 +32,8 @@ public class UserService {
     // Inyectar el codificador de contraseñas para manejar el hashing de las contraseñas de los usuarios
     private final PasswordEncoder passwordEncoder;
 
+    private final EmailService emailService;
+
     public MessageResponseDTO updateUser(Long id, UpdateUserDTO request, String requesterRole, Long requesterId) {
 
         if (!"admin".equalsIgnoreCase(requesterRole) && !requesterId.equals(id)) {
@@ -59,11 +61,16 @@ public class UserService {
             user.setDocNum(request.getDocNumber());
         if (request.getPhone() != null)
             user.setPhone(request.getPhone());
+        boolean passwordChanged = false;
         if (request.getPassword() != null && !request.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
+            passwordChanged = true;
         }
 
         usersRepository.save(user);
+        if (passwordChanged) {
+            emailService.sendPasswordChangedNotification(user.getEmail(), user.getNames());
+        }
 
         MessageResponseDTO response = new MessageResponseDTO();
         response.setMessage("Usuario actualizado correctamente");

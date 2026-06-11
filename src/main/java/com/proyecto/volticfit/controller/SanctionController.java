@@ -77,16 +77,17 @@ public class SanctionController {
         }
     }
  
-    @Operation(summary = "Get sanctions filtered by date range - ADMIN only")
+    @Operation(summary = "Get sanctions filtered by date range and optional user - ADMIN only")
     @GetMapping("/report")
     @RequiresRole(RoleEnum.ADMIN)
     public ResponseEntity<Object> getSanctionsReport(
             @org.springframework.web.bind.annotation.RequestParam(required = false) String startDate,
-            @org.springframework.web.bind.annotation.RequestParam(required = false) String endDate) {
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String endDate,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Long userId) {
         try {
             LocalDate start = startDate != null ? LocalDate.parse(startDate) : null;
             LocalDate end   = endDate   != null ? LocalDate.parse(endDate)   : null;
-            List<SanctionWithUserDTO> sanctions = sanctionService.getAllWithUserFiltered(start, end);
+            List<SanctionWithUserDTO> sanctions = sanctionService.getAllWithUserFiltered(userId, start, end);
             return ResponseEntity.ok(sanctions);
         } catch (Exception e) {
             MessageResponseDTO error = new MessageResponseDTO();
