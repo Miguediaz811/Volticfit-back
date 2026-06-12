@@ -33,7 +33,6 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/clinical-history/{historyId}/documents")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "${app.frontend.url:http://localhost:4200}")
 @Tag(name = "Clinical History Documents",
      description = "Subida y gestión de archivos PDF/Word en la historia clínica")
 public class ClinicalHistoryDocumentController {
