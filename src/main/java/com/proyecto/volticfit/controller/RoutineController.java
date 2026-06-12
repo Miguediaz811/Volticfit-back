@@ -44,8 +44,10 @@ public class RoutineController {
     public ResponseEntity<Object> generateRoutine(HttpServletRequest request) {
         try {
             Long userId = (Long) request.getAttribute("userId");
-            RoutineResponseDTO response = routineService.generateRoutine(userId);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            synchronized (String.valueOf(userId).intern()) {
+                RoutineResponseDTO response = routineService.generateRoutine(userId);
+                return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            }
         } catch (RuntimeException e) {
             MessageResponseDTO error = new MessageResponseDTO();
             error.setMessage(e.getMessage());

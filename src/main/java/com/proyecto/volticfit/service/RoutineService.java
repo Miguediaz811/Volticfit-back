@@ -104,6 +104,13 @@ public class RoutineService {
         Optional<UserRoutine> activeRoutine = userRoutineRepository.findByUserIdUserAndStateTrue(userId);
         if (activeRoutine.isPresent()) {
             LocalDate lastAssignment = activeRoutine.get().getAssignmentDate();
+            
+            // Idempotencia específica: si la rutina activa se generó hoy mismo, la retornamos en lugar de arrojar error
+            if (lastAssignment != null && lastAssignment.equals(LocalDate.now())) {
+                log.info("Idempotencia: Retornando rutina activa generada hoy para el usuario {}", userId);
+                return getActiveRoutine(userId);
+            }
+
             long daysSince = ChronoUnit.DAYS.between(lastAssignment, LocalDate.now());
             if (daysSince < MIN_DAYS_BETWEEN_ROUTINES) {
                 long daysRemaining = MIN_DAYS_BETWEEN_ROUTINES - daysSince;
