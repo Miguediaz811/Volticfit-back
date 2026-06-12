@@ -13,13 +13,16 @@ public class ActivityLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "usuario_id")
     private Long usuarioId;
 
     private String accion;
 
     private String modulo;
 
+    @Column(name = "status_http")
     private int statusHttp;
     
+    @Column(name = "fecha_hora")
     private LocalDateTime fechaHora = LocalDateTime.now();
 }

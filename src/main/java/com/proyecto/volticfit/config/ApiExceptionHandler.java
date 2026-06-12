@@ -44,6 +44,13 @@ public class ApiExceptionHandler {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
     }
 
+    @ExceptionHandler(IdempotencyConflictException.class)
+    public ResponseEntity<MessageResponseDTO> handleIdempotencyConflict(IdempotencyConflictException ex) {
+        MessageResponseDTO response = new MessageResponseDTO();
+        response.setMessage(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<MessageResponseDTO> handleGenericException(Exception ex) {
         MessageResponseDTO response = new MessageResponseDTO();
