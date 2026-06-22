@@ -43,11 +43,11 @@ spring:
     username: ${MAIL_USERNAME:volticfit@gmail.com}
     password: ${MAIL_PASSWORD:pnnz onsb dvcb grse}
     properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
 
 app:
   frontend:
