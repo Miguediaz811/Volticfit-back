@@ -45,7 +45,7 @@ public class PasswordResetService {
                 response.setMessage("Código de recuperación enviado");
                 return response;
             })
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ese correo"));
+            .orElseThrow(() -> new RuntimeException("tu correo no está registrado"));
     }
 
     /**

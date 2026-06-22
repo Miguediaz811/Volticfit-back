@@ -184,8 +184,8 @@ public class AuthController {
             return ResponseEntity.ok(authService.verifyRecoveryCode(request));
         } catch (Exception e) {
             MessageResponseDTO response = new MessageResponseDTO();
-            response.setMessage("Si el correo existe, recibir谩 instrucciones en breve.");
-            return ResponseEntity.status(HttpStatus.OK).body(response);
+            response.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
 
