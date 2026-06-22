@@ -29,6 +29,7 @@ import com.proyecto.volticfit.entity.UserSanction;
 import com.proyecto.volticfit.entity.Users;
 import com.proyecto.volticfit.repository.AttendanceRepository;
 import com.proyecto.volticfit.repository.QrCodeRepository;
+import com.proyecto.volticfit.repository.ReservationRepository;
 import com.proyecto.volticfit.repository.UserSanctionRepository;
 import com.proyecto.volticfit.repository.UsersRepository;
 
@@ -59,6 +60,9 @@ public class AttendanceService {
     // Repository for user sanctions to check active sanctions during attendance registration
     private final UserSanctionRepository userSanctionRepository;
 
+    // Repository for reservations to check active reservations
+    private final ReservationRepository reservationRepository;
+
     // JWT service for validating tokens in attendance history retrieval
     private final JwtService jwtService;
 
@@ -73,6 +77,16 @@ public class AttendanceService {
     public QrGeneratedResponseDTO generateQR(Long userId) {
         Users user = usersRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("No se encontro el usuario"));
+
+        // Validate reservation if the user is "aprendiz" or "funcionario"
+        if (user.getRole() != null && 
+            ("aprendiz".equalsIgnoreCase(user.getRole().getName()) || "funcionario".equalsIgnoreCase(user.getRole().getName()))) {
+            LocalDate today = LocalDate.now();
+            boolean hasReservation = reservationRepository.existsByDateAndUserIdUserAndState(today, userId, true);
+            if (!hasReservation) {
+                throw new RuntimeException("Lo sentimos, pero no puedes generar un QR si no tienes reservas para el día de hoy");
+            }
+        }
 
         // Check if user already has an active QR
         Optional<QrCode> existingQR = qrCodeRepository.findByUserIdUserAndUsed(userId, false);
@@ -121,6 +135,16 @@ public class AttendanceService {
         Optional<Sanction> activeSanction = getActiveSanction(user.getIdUser());
         if (activeSanction.isPresent()) {
             return buildSanctionResponse(user, activeSanction.get());
+        }
+
+        // ENTRY: validate reservation if the user is "aprendiz" or "funcionario"
+        if (user.getRole() != null && 
+            ("aprendiz".equalsIgnoreCase(user.getRole().getName()) || "funcionario".equalsIgnoreCase(user.getRole().getName()))) {
+            LocalDate today = LocalDate.now();
+            boolean hasReservation = reservationRepository.existsByDateAndUserIdUserAndState(today, user.getIdUser(), true);
+            if (!hasReservation) {
+                throw new RuntimeException("Lo sentimos, pero no puedes ingresar si no tienes una reserva activa para hoy");
+            }
         }
 
         return registerEntry(user, qrCode);
