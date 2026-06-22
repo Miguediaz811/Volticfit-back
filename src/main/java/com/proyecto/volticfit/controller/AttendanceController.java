@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.proyecto.volticfit.dto.Attendance.AttendanceRequestDTO;
 import com.proyecto.volticfit.dto.Attendance.AttendanceResponseDTO;
 import com.proyecto.volticfit.dto.Attendance.AttendanceListResponseDTO;
+import com.proyecto.volticfit.dto.MessageResponseDTO;
 import com.proyecto.volticfit.dto.Attendance.ManualAttendanceRequestDTO;
 import com.proyecto.volticfit.dto.QrCode.QrGeneratedResponseDTO;
 import com.proyecto.volticfit.service.AttendanceService;
@@ -39,10 +40,16 @@ public class AttendanceController {
      * @return QrResponseDTO with base64 image and token
      */
     @GetMapping("/qr")
-    public ResponseEntity<QrGeneratedResponseDTO> generateQR(
+    public ResponseEntity<?> generateQR(
             @RequestParam Long userId
     ) {
-        return ResponseEntity.ok(attendanceService.generateQR(userId));
+        try {
+            return ResponseEntity.ok(attendanceService.generateQR(userId));
+        } catch (RuntimeException e) {
+            MessageResponseDTO errorResponse = new MessageResponseDTO();
+            errorResponse.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
     }
  
     /**

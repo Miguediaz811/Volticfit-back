@@ -34,6 +34,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             LocalDate date, LocalTime startTime, Long userId, Boolean state);
  
     /**
+     * Check if an active reservation exists for a user on a specific date.
+     */
+    boolean existsByDateAndUserIdUserAndState(LocalDate date, Long userId, Boolean state);
+ 
+    /**
      * Find all active reservations for a user.
      */
     List<Reservation> findByUserIdUserAndState(Long userId, Boolean state);

@@ -84,6 +84,18 @@ public class ReservationService {
     public MessageResponseDTO createReservation(CreateReservationDTO request, Long userId) {
         validateCurrentOrFutureDate(request.getDate());
 
+        Users user = usersRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("No se encontro el usuario"));
+
+        // Validate if the user is "aprendiz" and already has an active reservation for this date
+        if (user.getRole() != null && "aprendiz".equalsIgnoreCase(user.getRole().getName())) {
+            boolean alreadyHasReservationToday = reservationRepository.existsByDateAndUserIdUserAndState(
+                    request.getDate(), userId, true);
+            if (alreadyHasReservationToday) {
+                throw new RuntimeException("Lo sentimos, como aprendiz solo puedes realizar una reserva por día");
+            }
+        }
+
         if (!SHIFT_START_TIMES.contains(request.getStartTime())) {
             throw new RuntimeException("Selecciona un horario valido");
         }
@@ -103,9 +115,6 @@ public class ReservationService {
         if (taken >= MAX_SPOTS) {
             throw new RuntimeException("No hay cupos disponibles para este horario");
         }
-
-        Users user = usersRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("No se encontro el usuario"));
 
         Reservation reservation = new Reservation();
         reservation.setUser(user);
