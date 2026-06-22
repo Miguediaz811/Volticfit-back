@@ -3,6 +3,7 @@ package com.proyecto.volticfit.service;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Async;
 
 import com.proyecto.volticfit.config.AppConstants;
 
@@ -21,6 +22,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
+    @Async
     public void sendRecoveryCode(String destinatario, String token) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -40,6 +42,7 @@ public class EmailService {
         }
     }
 
+    @Async
     public void sendPasswordChangedNotification(String destinatario, String userName) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
