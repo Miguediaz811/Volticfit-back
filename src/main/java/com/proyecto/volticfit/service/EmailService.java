@@ -36,9 +36,9 @@ public class EmailService {
             helper.setText(html, true);
 
             mailSender.send(message);
-            log.info("Recovery code sent successfully to: {}", destinatario);
+            log.info("Correo con el código de recuperación enviado exitosamente a: {}", destinatario);
         } catch (Exception e) {
-            log.error("Failed to send recovery code to {}: {}", destinatario, e.getMessage());
+            log.error("Fallo al enviar el código de recuperación a {}: {}", destinatario, e.getMessage());
         }
     }
 
@@ -66,9 +66,9 @@ public class EmailService {
 
             helper.setText(html, true);
             mailSender.send(message);
-            log.info("Password change notification sent successfully to: {}", destinatario);
+            log.info("Correo de notificación de cambio de contraseña enviado exitosamente a: {}", destinatario);
         } catch (Exception e) {
-            log.error("Failed to send password change notification to {}: {}", destinatario, e.getMessage());
+            log.error("Fallo al enviar la notificación de cambio de contraseña a {}: {}", destinatario, e.getMessage());
         }
     }
 
