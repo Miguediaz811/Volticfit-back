@@ -12,11 +12,14 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
+import lombok.extern.log4j.Log4j2;
+
 /**
  * Servicio para gestionar el ciclo de vida de la recuperación de contraseñas
  */
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class PasswordResetService {
 
     // Repositorio de usuarios para manejar las operaciones relacionadas con los usuarios
@@ -40,6 +43,7 @@ public class PasswordResetService {
             .map(user -> {
                 String code = String.format("%06d", new Random().nextInt(999999));
                 verificationCodes.put(request.getEmail(), code);
+                log.info("Código de recuperación generado para {}: {}", request.getEmail(), code);
                 emailService.sendRecoveryCode(request.getEmail(), code);
                 MessageResponseDTO response = new MessageResponseDTO();
                 response.setMessage("Código de recuperación enviado");
