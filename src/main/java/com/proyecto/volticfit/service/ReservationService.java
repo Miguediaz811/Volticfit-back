@@ -1,6 +1,7 @@
 package com.proyecto.volticfit.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -49,16 +50,24 @@ public class ReservationService {
      */
     public List<ShiftResponseDTO> getAvailableShifts(LocalDate date) {
         validateCurrentOrFutureDate(date);
+        LocalDate today = LocalDate.now();
+        LocalTime nowTime = LocalTime.now();
         return SHIFT_START_TIMES.stream()
                 .map(startTime -> {
                     int taken = reservationRepository.countByDateAndStartTimeAndState(date, startTime, true);
                     int available = MAX_SPOTS - taken;
+                    
+                    boolean isFuture = true;
+                    if (date.isEqual(today)) {
+                        isFuture = startTime.isAfter(nowTime);
+                    }
+                    
                     return new ShiftResponseDTO(
                             startTime.toString(),
                             startTime.plusHours(1).toString(),
                             available,
                             MAX_SPOTS,
-                            available > 0
+                            available > 0 && isFuture
                     );
                 })
                 .toList();
@@ -78,22 +87,26 @@ public class ReservationService {
         if (!SHIFT_START_TIMES.contains(request.getStartTime())) {
             throw new RuntimeException("Selecciona un horario valido");
         }
- 
+        
+        if (request.getDate().isEqual(LocalDate.now()) && request.getStartTime().isBefore(LocalTime.now())) {
+            throw new RuntimeException("No puedes reservar un horario que ya paso");
+        }
+
         reservationRepository.findByDateAndStartTimeAndUserIdUserAndState(
                 request.getDate(), request.getStartTime(), userId, true)
                 .ifPresent(r -> {
                     throw new RuntimeException("Ya tienes una reserva para este horario");
                 });
- 
+
         int taken = reservationRepository.countByDateAndStartTimeAndState(
                 request.getDate(), request.getStartTime(), true);
         if (taken >= MAX_SPOTS) {
             throw new RuntimeException("No hay cupos disponibles para este horario");
         }
- 
+
         Users user = usersRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("No se encontro el usuario"));
- 
+
         Reservation reservation = new Reservation();
         reservation.setUser(user);
         reservation.setDate(request.getDate());
@@ -101,9 +114,9 @@ public class ReservationService {
         reservation.setEndTime(request.getStartTime().plusHours(1));
         reservation.setState(true);
         reservationRepository.save(reservation);
- 
+
         log.info("Reservation created for user: {} on {} at {}", userId, request.getDate(), request.getStartTime());
- 
+
         MessageResponseDTO response = new MessageResponseDTO();
         response.setMessage("Reserva creada correctamente");
         return response;
@@ -140,8 +153,26 @@ public class ReservationService {
      * @param userId the user ID
      * @return list of reservations
      */
+    @Transactional
     public List<Reservation> getUserReservations(Long userId) {
-        return reservationRepository.findByUserIdUserAndState(userId, true);
+        List<Reservation> activeReservations = reservationRepository.findByUserIdUserAndState(userId, true);
+        LocalDateTime now = LocalDateTime.now();
+        boolean modified = false;
+        for (Reservation r : activeReservations) {
+            if (r.getDate() != null && r.getStartTime() != null) {
+                LocalTime end = r.getEndTime() != null ? r.getEndTime() : r.getStartTime().plusHours(1);
+                LocalDateTime reservationEnd = LocalDateTime.of(r.getDate(), end);
+                if (reservationEnd.isBefore(now)) {
+                    r.setState(false);
+                    reservationRepository.save(r);
+                    modified = true;
+                }
+            }
+        }
+        if (modified) {
+            return reservationRepository.findByUserIdUserAndState(userId, true);
+        }
+        return activeReservations;
     }
 
     /**
@@ -150,12 +181,30 @@ public class ReservationService {
      * @param requesterRole the role of the requester
      * @return list of active reservations
      */
+    @Transactional
     public List<Reservation> getAllActiveReservations(String requesterRole) {
         if (!"admin".equalsIgnoreCase(requesterRole)) {
             throw new RuntimeException("No tienes permiso para ver todas las reservas");
         }
 
-        return reservationRepository.findByState(true);
+        List<Reservation> activeReservations = reservationRepository.findByState(true);
+        LocalDateTime now = LocalDateTime.now();
+        boolean modified = false;
+        for (Reservation r : activeReservations) {
+            if (r.getDate() != null && r.getStartTime() != null) {
+                LocalTime end = r.getEndTime() != null ? r.getEndTime() : r.getStartTime().plusHours(1);
+                LocalDateTime reservationEnd = LocalDateTime.of(r.getDate(), end);
+                if (reservationEnd.isBefore(now)) {
+                    r.setState(false);
+                    reservationRepository.save(r);
+                    modified = true;
+                }
+            }
+        }
+        if (modified) {
+            return reservationRepository.findByState(true);
+        }
+        return activeReservations;
     }
 
     /**
@@ -168,6 +217,12 @@ public class ReservationService {
      */
     @Transactional
     public MessageResponseDTO createFullGymReservation(CreateFullGymReservationDTO request, Long userId) {
+        if (request.getReservationDate() == null) {
+            throw new RuntimeException("La fecha es obligatoria");
+        }
+        if (!request.getReservationDate().isAfter(LocalDate.now())) {
+            throw new RuntimeException("La reserva del gimnasio completo debe hacerse con al menos un dia de antelacion");
+        }
         validateCurrentOrFutureDate(request.getReservationDate());
 
         if (request.getStartTime() == null || request.getEndTime() == null) {
@@ -175,6 +230,9 @@ public class ReservationService {
         }
         if (!request.getEndTime().isAfter(request.getStartTime())) {
             throw new RuntimeException("La hora de fin debe ser posterior a la hora de inicio");
+        }
+        if (!request.getEndTime().equals(request.getStartTime().plusHours(1))) {
+            throw new RuntimeException("La reserva del gimnasio completo solo puede ser de una hora");
         }
 
         Users user = usersRepository.findById(userId)

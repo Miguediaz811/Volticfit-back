@@ -92,11 +92,15 @@ public class ExportService {
      * Exports attendance report as PDF.
      */
     public byte[] exportAttendancePdf() {
-        return exportAttendancePdf(null);
+        return exportAttendancePdf(null, null, null);
     }
 
     public byte[] exportAttendancePdf(Long userId) {
-        List<Attendance> attendances = filterAttendance(userId);
+        return exportAttendancePdf(userId, null, null);
+    }
+
+    public byte[] exportAttendancePdf(Long userId, LocalDate startDate, LocalDate endDate) {
+        List<Attendance> attendances = filterAttendance(userId, startDate, endDate);
         try {
             Document document = new Document();
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -135,7 +139,11 @@ public class ExportService {
      * Exports machines report as PDF.
      */
     public byte[] exportMachinesPdf() {
-        List<Machine> machines = machineRepository.findAll();
+        return exportMachinesPdf(null);
+    }
+
+    public byte[] exportMachinesPdf(String status) {
+        List<Machine> machines = filterMachines(status);
         try {
             Document document = new Document();
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -174,11 +182,15 @@ public class ExportService {
      * Exports sanctions report as PDF.
      */
     public byte[] exportSanctionsPdf() {
-        return exportSanctionsPdf(null);
+        return exportSanctionsPdf(null, null, null, null);
     }
 
     public byte[] exportSanctionsPdf(Long userId) {
-        List<UserSanction> sanctions = filterUserSanctions(userId);
+        return exportSanctionsPdf(userId, null, null, null);
+    }
+
+    public byte[] exportSanctionsPdf(Long userId, LocalDate startDate, LocalDate endDate, String status) {
+        List<UserSanction> sanctions = filterUserSanctions(userId, startDate, endDate, status);
         try {
             Document document = new Document();
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -255,11 +267,15 @@ public class ExportService {
      * Exports attendance report as Excel.
      */
     public byte[] exportAttendanceExcel() {
-        return exportAttendanceExcel(null);
+        return exportAttendanceExcel(null, null, null);
     }
 
     public byte[] exportAttendanceExcel(Long userId) {
-        List<Attendance> attendances = filterAttendance(userId);
+        return exportAttendanceExcel(userId, null, null);
+    }
+
+    public byte[] exportAttendanceExcel(Long userId, LocalDate startDate, LocalDate endDate) {
+        List<Attendance> attendances = filterAttendance(userId, startDate, endDate);
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Asistencia");
             createExcelHeader(sheet, "Usuario", "Hora de Entrada", "Hora de Salida", "Tipo");
@@ -288,7 +304,11 @@ public class ExportService {
      * Exports machines report as Excel.
      */
     public byte[] exportMachinesExcel() {
-        List<Machine> machines = machineRepository.findAll();
+        return exportMachinesExcel(null);
+    }
+
+    public byte[] exportMachinesExcel(String status) {
+        List<Machine> machines = filterMachines(status);
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Máquinas");
             createExcelHeader(sheet, "ID", "Nombre", "Tipo", "Estado");
@@ -317,11 +337,15 @@ public class ExportService {
      * Exports sanctions report as Excel.
      */
     public byte[] exportSanctionsExcel() {
-        return exportSanctionsExcel(null);
+        return exportSanctionsExcel(null, null, null, null);
     }
 
     public byte[] exportSanctionsExcel(Long userId) {
-        List<UserSanction> sanctions = filterUserSanctions(userId);
+        return exportSanctionsExcel(userId, null, null, null);
+    }
+
+    public byte[] exportSanctionsExcel(Long userId, LocalDate startDate, LocalDate endDate, String status) {
+        List<UserSanction> sanctions = filterUserSanctions(userId, startDate, endDate, status);
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Sanciones");
             createExcelHeader(sheet, "Usuario", "Documento", "Tipo", "Descripción", "Fecha Inicio", "Fecha Fin");
@@ -354,7 +378,11 @@ public class ExportService {
      * Exports maintenance report as PDF.
      */
     public byte[] exportMaintenancePdf() {
-        List<MachineMaintenance> records = maintenanceRepository.findAll();
+        return exportMaintenancePdf(null, null);
+    }
+
+    public byte[] exportMaintenancePdf(LocalDate startDate, LocalDate endDate) {
+        List<MachineMaintenance> records = filterMaintenance(startDate, endDate);
         try {
             Document document = new Document();
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -395,7 +423,11 @@ public class ExportService {
      * Exports maintenance report as Excel.
      */
     public byte[] exportMaintenanceExcel() {
-        List<MachineMaintenance> records = maintenanceRepository.findAll();
+        return exportMaintenanceExcel(null, null);
+    }
+
+    public byte[] exportMaintenanceExcel(LocalDate startDate, LocalDate endDate) {
+        List<MachineMaintenance> records = filterMaintenance(startDate, endDate);
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Mantenimiento");
             createExcelHeader(sheet, "Equipo", "Tipo", "Descripción", "Fecha", "Responsable", "Estado");
@@ -545,16 +577,93 @@ public class ExportService {
     }
 
     private List<Attendance> filterAttendance(Long userId) {
+        return filterAttendance(userId, null, null);
+    }
+
+    private List<Attendance> filterAttendance(Long userId, LocalDate startDate, LocalDate endDate) {
         return attendanceRepository.findAll().stream()
                 .filter(attendance -> userId == null
                         || (attendance.getUser() != null && userId.equals(attendance.getUser().getIdUser())))
+                .filter(attendance -> {
+                    if (startDate == null && endDate == null) return true;
+                    if (attendance.getEntryTime() == null) return false;
+                    LocalDate entryDate = attendance.getEntryTime().toLocalDate();
+                    if (startDate != null && entryDate.isBefore(startDate)) return false;
+                    if (endDate != null && entryDate.isAfter(endDate)) return false;
+                    return true;
+                })
+                .sorted((a, b) -> {
+                    if (a.getEntryTime() == null) return 1;
+                    if (b.getEntryTime() == null) return -1;
+                    return b.getEntryTime().compareTo(a.getEntryTime());
+                })
                 .toList();
     }
 
     private List<UserSanction> filterUserSanctions(Long userId) {
+        return filterUserSanctions(userId, null, null, null);
+    }
+
+    private List<UserSanction> filterUserSanctions(Long userId, LocalDate startDate, LocalDate endDate, String status) {
         return userSanctionRepository.findAll().stream()
                 .filter(userSanction -> userId == null
                         || (userSanction.getUser() != null && userId.equals(userSanction.getUser().getIdUser())))
+                .filter(userSanction -> {
+                    Sanction s = userSanction.getSanction();
+                    if (s == null) return false;
+                    if (status != null && !status.isEmpty()) {
+                        boolean wantActive = "activo".equalsIgnoreCase(status);
+                        if (s.getState() != wantActive) return false;
+                    }
+                    if (startDate == null && endDate == null) return true;
+                    if (s.getStartDate() == null) return false;
+                    LocalDate sDate = s.getStartDate();
+                    if (startDate != null && sDate.isBefore(startDate)) return false;
+                    if (endDate != null && sDate.isAfter(endDate)) return false;
+                    return true;
+                })
+                .sorted((a, b) -> {
+                    LocalDate da = a.getSanction().getStartDate();
+                    LocalDate db = b.getSanction().getStartDate();
+                    if (da == null) return 1;
+                    if (db == null) return -1;
+                    return db.compareTo(da);
+                })
+                .toList();
+    }
+
+    private List<MachineMaintenance> filterMaintenance(LocalDate startDate, LocalDate endDate) {
+        return maintenanceRepository.findAll().stream()
+                .filter(m -> {
+                    if (m.getMachine() == null) return false;
+                    String machineName = m.getMachine().getName();
+                    if (machineName == null || machineName.trim().equalsIgnoreCase("sin maquina")) return false;
+                    if (startDate == null && endDate == null) return true;
+                    if (m.getDate() == null) return false;
+                    if (startDate != null && m.getDate().isBefore(startDate)) return false;
+                    if (endDate != null && m.getDate().isAfter(endDate)) return false;
+                    return true;
+                })
+                .sorted((a, b) -> {
+                    if (a.getDate() == null) return 1;
+                    if (b.getDate() == null) return -1;
+                    return b.getDate().compareTo(a.getDate());
+                })
+                .toList();
+    }
+
+    private List<Machine> filterMachines(String status) {
+        return machineRepository.findAll().stream()
+                .filter(m -> {
+                    String name = m.getName() != null ? m.getName().toLowerCase() : "";
+                    String type = m.getType() != null ? m.getType().toLowerCase() : "";
+                    if (name.equals("sin maquina") || type.equals("peso corporal")) return false;
+                    if (status != null && !status.isEmpty()) {
+                        boolean wantActive = "activo".equalsIgnoreCase(status);
+                        return m.getState() == wantActive;
+                    }
+                    return true;
+                })
                 .toList();
     }
 

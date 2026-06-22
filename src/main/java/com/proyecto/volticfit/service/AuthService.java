@@ -61,8 +61,12 @@ public class AuthService {
             throw new RuntimeException("Este correo ya está en uso");
         }
  
+        if (usersRepository.findByDocNum(request.getDocNum()).isPresent()) {
+            throw new RuntimeException("este número de documento ya está en uso");
+        }
+ 
         Role defaultRole = rolRepository.findByName(DEFAULT_ROLE)
-                .orElseThrow(() -> new RuntimeException("No se encontro el rol inicial"));
+                .orElseThrow(() -> new RuntimeException("No se encontró el rol inicial"));
  
         Users user = new Users();
         user.setNames(request.getNames());
@@ -92,7 +96,7 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
  
         if (!user.getState()) {
-            throw new RuntimeException("Tu cuenta esta inactiva");
+            throw new RuntimeException("Tu cuenta está inactiva");
         }
  
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
