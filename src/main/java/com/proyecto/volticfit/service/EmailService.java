@@ -4,6 +4,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -26,6 +27,9 @@ import lombok.extern.log4j.Log4j2;
 @RequiredArgsConstructor
 public class EmailService {
 
+    private static final int SMTP_MAX_ATTEMPTS = 3;
+    private static final long SMTP_BACKOFF_BASE_MS = 2000L;
+
     private final JavaMailSender mailSender;
 
     @Value("${RESEND_API_KEY:}")
@@ -36,20 +40,27 @@ public class EmailService {
 
     @Async
     public void sendRecoveryCode(String destinatario, String token) {
-        log.info("[EmailService] Iniciando proceso de envío asíncrono para: {}", destinatario);
+        log.info("[EmailService] Iniciando proceso de envío asíncrono de código de recuperación para: {}", destinatario);
         String subject = AppConstants.RECOVERY_SUBJECT;
         String html = String.format(AppConstants.RECOVERY_HTML_TEMPLATE, token, AppConstants.RECOVERY_EXPIRATION_MINUTES);
-        
+
         if (resendApiKey != null && !resendApiKey.isBlank()) {
+            log.info("[EmailService] Proveedor seleccionado: Resend API");
             sendEmailViaResend(destinatario, subject, html);
         } else {
-            sendEmailViaJavaMail(destinatario, subject, html);
+            log.info("[EmailService] Proveedor seleccionado: SMTP (Gmail). Host: smtp.gmail.com:587");
+            try {
+                sendEmailViaJavaMailWithRetry(destinatario, subject, html);
+            } catch (RuntimeException e) {
+                log.error("[EmailService] Envío asíncrono de código de recuperación fallido definitivamente para {}: {}",
+                        destinatario, e.getMessage());
+            }
         }
     }
 
     @Async
     public void sendPasswordChangedNotification(String destinatario, String userName) {
-        log.info("[EmailService] Iniciando proceso de envío asíncrono para notificación de cambio de contraseña: {}", destinatario);
+        log.info("[EmailService] Iniciando proceso de envío asíncrono de notificación de cambio de contraseña para: {}", destinatario);
         String safeName = userName == null || userName.isBlank() ? "usuario" : userName.trim();
         String html = """
                 <div style="font-family:Arial,Helvetica,sans-serif;background:#1e1e1e;color:#ffffff;padding:28px;">
@@ -62,30 +73,81 @@ public class EmailService {
                 </div>
                 """.formatted(safeName);
         String subject = "Tu contrasena de VolticFit fue actualizada";
-        
+
         if (resendApiKey != null && !resendApiKey.isBlank()) {
+            log.info("[EmailService] Proveedor seleccionado: Resend API");
             sendEmailViaResend(destinatario, subject, html);
         } else {
-            sendEmailViaJavaMail(destinatario, subject, html);
+            log.info("[EmailService] Proveedor seleccionado: SMTP (Gmail). Host: smtp.gmail.com:587");
+            try {
+                sendEmailViaJavaMailWithRetry(destinatario, subject, html);
+            } catch (RuntimeException e) {
+                log.error("[EmailService] Envío asíncrono de notificación de cambio de contraseña fallido definitivamente para {}: {}",
+                        destinatario, e.getMessage());
+            }
         }
     }
 
-    private void sendEmailViaJavaMail(String to, String subject, String htmlContent) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+    /**
+     * Sends an email via JavaMail with up to {@value #SMTP_MAX_ATTEMPTS} attempts
+     * and exponential backoff between retries.
+     *
+     * <p>When called from an {@code @Async} context the exception is silently
+     * discarded by the async executor (expected behaviour). When called
+     * synchronously — e.g. from {@code EmailTestController} — the exception
+     * propagates to the caller so it can surface a meaningful HTTP error.</p>
+     *
+     * @throws RuntimeException wrapping the last SMTP failure after all retries
+     */
+    public void sendEmailViaJavaMailWithRetry(String to, String subject, String htmlContent) {
+        Exception lastException = null;
 
-            helper.setTo(to);
-            prepareTransactionalMessage(message, helper);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
+        for (int attempt = 1; attempt <= SMTP_MAX_ATTEMPTS; attempt++) {
+            log.info("[EmailService] SMTP intento {}/{} para: {}", attempt, SMTP_MAX_ATTEMPTS, to);
+            try {
+                sendEmailViaJavaMail(to, subject, htmlContent);
+                return; // success — exit immediately
+            } catch (Exception e) {
+                lastException = e;
+                log.warn("[EmailService] SMTP intento {}/{} fallido para {}. Causa: {} — {}",
+                        attempt, SMTP_MAX_ATTEMPTS, to,
+                        e.getClass().getSimpleName(), e.getMessage());
 
-            log.info("[EmailService] Enviando correo a {} vía SMTP (Gmail)...", to);
-            mailSender.send(message);
-            log.info("Correo enviado exitosamente a: {}", to);
-        } catch (Exception e) {
-            log.error("Fallo al enviar el correo a {} vía SMTP: {}", to, e.getMessage());
+                if (attempt < SMTP_MAX_ATTEMPTS) {
+                    long backoffMs = SMTP_BACKOFF_BASE_MS * (1L << (attempt - 1)); // 2s, 4s
+                    log.info("[EmailService] Esperando {}ms antes del siguiente intento...", backoffMs);
+                    try {
+                        Thread.sleep(backoffMs);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        log.warn("[EmailService] Hilo interrumpido durante backoff. Abortando reintentos.");
+                        break;
+                    }
+                }
+            }
         }
+
+        String errorDetail = lastException != null
+                ? lastException.getClass().getSimpleName() + " — " + lastException.getMessage()
+                : "error desconocido";
+        log.error("[EmailService] Todos los intentos SMTP fallaron para {}. Último error: {}",
+                to, errorDetail, lastException);
+        throw new RuntimeException("SMTP falló tras " + SMTP_MAX_ATTEMPTS + " intentos: " + errorDetail, lastException);
+    }
+
+    private void sendEmailViaJavaMail(String to, String subject, String htmlContent) throws Exception {
+        log.debug("[EmailService] Creando MimeMessage para: {}", to);
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo(to);
+        prepareTransactionalMessage(message, helper);
+        helper.setSubject(subject);
+        helper.setText(htmlContent, true);
+
+        log.info("[EmailService] Estableciendo conexión SMTP con smtp.gmail.com:587 (STARTTLS)...");
+        mailSender.send(message);
+        log.info("[EmailService] Correo enviado exitosamente a {} vía SMTP.", to);
     }
 
     private void prepareTransactionalMessage(MimeMessage message, MimeMessageHelper helper) throws Exception {
@@ -99,6 +161,7 @@ public class EmailService {
 
     private void sendEmailViaResend(String to, String subject, String htmlContent) {
         try {
+            log.debug("[EmailService] Construyendo payload JSON para Resend API. Destinatario: {}", to);
             String jsonPayload = """
                 {
                   "from": "%s",
@@ -113,24 +176,29 @@ public class EmailService {
                     escapeJson(htmlContent)
                 );
 
-            HttpClient client = HttpClient.newHttpClient();
+            log.info("[EmailService] Conectando a api.resend.com (HTTPS/443)...");
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(10))
+                    .build();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("https://api.resend.com/emails"))
                     .header("Authorization", "Bearer " + resendApiKey)
                     .header("Content-Type", "application/json")
+                    .timeout(Duration.ofSeconds(15))
                     .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
                     .build();
 
-            log.info("[EmailService] Enviando correo a {} vía Resend API (puerto 443)...", to);
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 200 || response.statusCode() == 201) {
-                log.info("[EmailService] Correo enviado exitosamente a {} vía Resend API. Código: {}", to, response.statusCode());
+                log.info("[EmailService] Correo enviado exitosamente a {} vía Resend API. HTTP {}", to, response.statusCode());
             } else {
-                log.error("[EmailService] Falló al enviar correo vía Resend API. Código: {}. Respuesta: {}", response.statusCode(), response.body());
+                log.error("[EmailService] Resend API rechazó el envío. HTTP {}. Cuerpo de respuesta: {}",
+                        response.statusCode(), response.body());
             }
         } catch (Exception e) {
-            log.error("[EmailService] Error al enviar correo vía Resend API a {}: {}", to, e.getMessage(), e);
+            log.error("[EmailService] Error de conexión con Resend API para {}: {} — {}",
+                    to, e.getClass().getSimpleName(), e.getMessage(), e);
         }
     }
 

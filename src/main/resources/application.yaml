@@ -40,11 +40,14 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME:volticfit@gmail.com}
-    password: ${MAIL_PASSWORD:pnnz onsb dvcb grse}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    # Set SPRING_MAIL_DEBUG=true in Railway to enable full JavaMail session logging
+    debug: ${SPRING_MAIL_DEBUG:false}
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
       mail.smtp.connectiontimeout: 10000
       mail.smtp.timeout: 10000
       mail.smtp.writetimeout: 10000
