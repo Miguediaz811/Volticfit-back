@@ -56,6 +56,14 @@ app:
     path: ${UPLOAD_PATH:uploads/medical-docs}
     clinical-docs: ${UPLOAD_CLINICAL_PATH:uploads/clinical-docs}
 
+gmail:
+  api:
+    enabled: ${GMAIL_API_ENABLED:false}
+  credentials:
+    json: ${GMAIL_CREDENTIALS_JSON:}
+  token:
+    path: ${GMAIL_TOKEN_PATH:/tmp/gmail-tokens}
+
 security:
   jwt:
     secret-key: ${JWT_SECRET}
