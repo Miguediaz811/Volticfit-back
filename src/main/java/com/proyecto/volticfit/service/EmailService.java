@@ -6,19 +6,27 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.proyecto.volticfit.config.AppConstants;
 
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 /**
- * Servicio encargado de la logica de envio de correos electronicos utilizando la API HTTP de Resend (Puerto 443).
+ * Servicio encargado de la logica de envio de correos electronicos (Soporta Resend API y Gmail SMTP de forma hibrida).
  */
 @Service
 @Log4j2
+@RequiredArgsConstructor
 public class EmailService {
+
+    private final JavaMailSender mailSender;
 
     @Value("${RESEND_API_KEY:}")
     private String resendApiKey;
@@ -31,7 +39,12 @@ public class EmailService {
         log.info("[EmailService] Iniciando proceso de envío asíncrono para: {}", destinatario);
         String subject = AppConstants.RECOVERY_SUBJECT;
         String html = String.format(AppConstants.RECOVERY_HTML_TEMPLATE, token, AppConstants.RECOVERY_EXPIRATION_MINUTES);
-        sendEmailViaResend(destinatario, subject, html);
+        
+        if (resendApiKey != null && !resendApiKey.isBlank()) {
+            sendEmailViaResend(destinatario, subject, html);
+        } else {
+            sendEmailViaJavaMail(destinatario, subject, html);
+        }
     }
 
     @Async
@@ -49,15 +62,42 @@ public class EmailService {
                 </div>
                 """.formatted(safeName);
         String subject = "Tu contrasena de VolticFit fue actualizada";
-        sendEmailViaResend(destinatario, subject, html);
+        
+        if (resendApiKey != null && !resendApiKey.isBlank()) {
+            sendEmailViaResend(destinatario, subject, html);
+        } else {
+            sendEmailViaJavaMail(destinatario, subject, html);
+        }
+    }
+
+    private void sendEmailViaJavaMail(String to, String subject, String htmlContent) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(to);
+            prepareTransactionalMessage(message, helper);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
+
+            log.info("[EmailService] Enviando correo a {} vía SMTP (Gmail)...", to);
+            mailSender.send(message);
+            log.info("Correo enviado exitosamente a: {}", to);
+        } catch (Exception e) {
+            log.error("Fallo al enviar el correo a {} vía SMTP: {}", to, e.getMessage());
+        }
+    }
+
+    private void prepareTransactionalMessage(MimeMessage message, MimeMessageHelper helper) throws Exception {
+        helper.setFrom(new InternetAddress(AppConstants.MAIL_FROM, "VolticFit", "UTF-8"));
+        helper.setReplyTo(AppConstants.MAIL_FROM);
+        message.addHeader("X-Mailer", "VolticFit Mailer");
+        message.addHeader("Precedence", "transactional");
+        message.addHeader("Auto-Submitted", "auto-generated");
+        message.addHeader("List-Unsubscribe", "<mailto:" + AppConstants.MAIL_FROM + ">");
     }
 
     private void sendEmailViaResend(String to, String subject, String htmlContent) {
-        if (resendApiKey == null || resendApiKey.isBlank()) {
-            log.error("[EmailService] No se puede enviar el correo. RESEND_API_KEY no está configurada.");
-            return;
-        }
-
         try {
             String jsonPayload = """
                 {
