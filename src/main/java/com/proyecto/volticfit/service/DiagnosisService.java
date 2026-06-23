@@ -202,6 +202,7 @@ public class DiagnosisService {
      * @return the IMC value
      */
     private double calculateIMC(double weight, double height) {
-        return weight / (height * height);
+        double rawImc = weight / (height * height);
+        return Math.round(rawImc * 100.0) / 100.0;
     }
 }

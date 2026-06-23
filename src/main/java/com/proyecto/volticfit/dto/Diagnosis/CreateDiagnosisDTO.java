@@ -2,6 +2,8 @@ package com.proyecto.volticfit.dto.Diagnosis;
 
 import java.time.LocalDate;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
@@ -20,11 +22,13 @@ public class CreateDiagnosisDTO {
     private Double muscleMass;
  
     @NotNull(message = "Height is required")
-    @Positive(message = "Height must be positive")
+    @DecimalMin(value = "0.5", message = "Height must be at least 0.5 meters")
+    @DecimalMax(value = "2.5", message = "Height must be at most 2.5 meters")
     private Double height;
  
     @NotNull(message = "Weight is required")
-    @Positive(message = "Weight must be positive")
+    @DecimalMin(value = "10.0", message = "Weight must be at least 10 kg")
+    @DecimalMax(value = "400.0", message = "Weight must be at most 400 kg")
     private Double weight;
  
     private String gender;
