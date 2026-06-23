@@ -19,7 +19,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 /**
- * Servicio encargado de la logica de envio de correos electronicos (Soporta Resend API y Gmail SMTP de forma hibrida).
+ * Servicio encargado de la logica de envio de correos electronicos.
+ * Soporta tres proveedores con prioridad decreciente:
+ *   1. Gmail API (OAuth2) — si {@code gmail.api.enabled=true}
+ *   2. Resend API          — si {@code RESEND_API_KEY} está configurado
+ *   3. Gmail SMTP          — fallback
  */
 @Service
 @Log4j2
@@ -27,6 +31,10 @@ import lombok.extern.log4j.Log4j2;
 public class EmailService {
 
     private final JavaMailSender mailSender;
+    private final GmailService gmailService;
+
+    @Value("${gmail.api.enabled:false}")
+    private boolean gmailApiEnabled;
 
     @Value("${RESEND_API_KEY:}")
     private String resendApiKey;
@@ -39,12 +47,7 @@ public class EmailService {
         log.info("[EmailService] Iniciando proceso de envío asíncrono para: {}", destinatario);
         String subject = AppConstants.RECOVERY_SUBJECT;
         String html = String.format(AppConstants.RECOVERY_HTML_TEMPLATE, token, AppConstants.RECOVERY_EXPIRATION_MINUTES);
-        
-        if (resendApiKey != null && !resendApiKey.isBlank()) {
-            sendEmailViaResend(destinatario, subject, html);
-        } else {
-            sendEmailViaJavaMail(destinatario, subject, html);
-        }
+        sendEmail(destinatario, subject, html);
     }
 
     @Async
@@ -62,13 +65,41 @@ public class EmailService {
                 </div>
                 """.formatted(safeName);
         String subject = "Tu contrasena de VolticFit fue actualizada";
-        
+        sendEmail(destinatario, subject, html);
+    }
+
+    // -------------------------------------------------------------------------
+    // Routing interno de proveedores
+    // -------------------------------------------------------------------------
+
+    /**
+     * Enruta el correo al proveedor disponible según la siguiente prioridad:
+     * <ol>
+     *   <li>Gmail API (OAuth2) si {@code gmail.api.enabled=true}</li>
+     *   <li>Resend API si {@code RESEND_API_KEY} está configurado</li>
+     *   <li>Gmail SMTP como fallback</li>
+     * </ol>
+     */
+    private void sendEmail(String to, String subject, String htmlContent) {
+        if (gmailApiEnabled) {
+            log.info("[EmailService] Proveedor seleccionado: Gmail API (OAuth2)");
+            boolean sent = gmailService.sendEmail(to, subject, htmlContent);
+            if (sent) return;
+            log.warn("[EmailService] Gmail API falló. Intentando proveedor alternativo...");
+        }
+
         if (resendApiKey != null && !resendApiKey.isBlank()) {
-            sendEmailViaResend(destinatario, subject, html);
+            log.info("[EmailService] Proveedor seleccionado: Resend API");
+            sendEmailViaResend(to, subject, htmlContent);
         } else {
-            sendEmailViaJavaMail(destinatario, subject, html);
+            log.info("[EmailService] Proveedor seleccionado: Gmail SMTP");
+            sendEmailViaJavaMail(to, subject, htmlContent);
         }
     }
+
+    // -------------------------------------------------------------------------
+    // Implementaciones de proveedores
+    // -------------------------------------------------------------------------
 
     private void sendEmailViaJavaMail(String to, String subject, String htmlContent) {
         try {
