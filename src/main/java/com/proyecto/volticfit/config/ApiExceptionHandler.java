@@ -78,7 +78,10 @@ public class ApiExceptionHandler {
             return "Error: Violación de restricción de base de datos.";
         }
         if (errorMsg.contains("data too long")) {
-            return "Error: Los datos proporcionados son demasiado largos.";
+            if (errorMsg.contains("descripcion") || errorMsg.contains("description")) {
+                return "La descripcion es demasiado larga. Usa maximo 250 caracteres.";
+            }
+            return "Los datos proporcionados son demasiado largos. Revisa la longitud de los campos.";
         }
         if (errorMsg.contains("invalid")) {
             return "Error: Datos inválidos para la operación solicitada.";
