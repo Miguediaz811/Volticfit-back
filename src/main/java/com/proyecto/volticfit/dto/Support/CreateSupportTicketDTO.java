@@ -11,7 +11,7 @@ public class CreateSupportTicketDTO {
     private String subject;
 
     @NotBlank(message = "La descripcion es obligatoria")
-    @Size(min = 12, message = "La descripcion debe tener al menos 12 caracteres")
+    @Size(min = 12, max = 250, message = "La descripcion debe tener entre 12 y 250 caracteres")
     private String description;
 
     private String attachment;
