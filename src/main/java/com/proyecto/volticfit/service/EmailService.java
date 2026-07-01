@@ -1,36 +1,26 @@
 package com.proyecto.volticfit.service;
 
+import com.proyecto.volticfit.config.AppConstants;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-
-import com.proyecto.volticfit.config.AppConstants;
-
-import jakarta.mail.internet.InternetAddress;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
-
 /**
- * Servicio encargado de la logica de envio de correos electronicos.
- * Soporta tres proveedores con prioridad decreciente:
- *   1. Gmail API (OAuth2) — si {@code gmail.api.enabled=true}
- *   2. Resend API          — si {@code RESEND_API_KEY} está configurado
- *   3. Gmail SMTP          — fallback
+ * Servicio encargado del envio de correos electronicos.
+ * Primero intenta Gmail API y, si existe API key, puede usar Resend como respaldo HTTP.
  */
 @Service
 @Log4j2
 @RequiredArgsConstructor
 public class EmailService {
 
-    private final JavaMailSender mailSender;
     private final GmailService gmailService;
 
     @Value("${gmail.api.enabled:false}")
@@ -44,7 +34,7 @@ public class EmailService {
 
     @Async
     public void sendRecoveryCode(String destinatario, String token) {
-        log.info("[EmailService] Iniciando proceso de envío asíncrono para: {}", destinatario);
+        log.info("[EmailService] Iniciando envio asincrono de codigo de recuperacion para: {}", destinatario);
         String subject = AppConstants.RECOVERY_SUBJECT;
         String html = String.format(AppConstants.RECOVERY_HTML_TEMPLATE, token, AppConstants.RECOVERY_EXPIRATION_MINUTES);
         sendEmail(destinatario, subject, html);
@@ -52,7 +42,7 @@ public class EmailService {
 
     @Async
     public void sendPasswordChangedNotification(String destinatario, String userName) {
-        log.info("[EmailService] Iniciando proceso de envío asíncrono para notificación de cambio de contraseña: {}", destinatario);
+        log.info("[EmailService] Iniciando envio asincrono de notificacion de cambio de contrasena para: {}", destinatario);
         String safeName = userName == null || userName.isBlank() ? "usuario" : userName.trim();
         String html = """
                 <div style="font-family:Arial,Helvetica,sans-serif;background:#1e1e1e;color:#ffffff;padding:28px;">
@@ -68,64 +58,23 @@ public class EmailService {
         sendEmail(destinatario, subject, html);
     }
 
-    // -------------------------------------------------------------------------
-    // Routing interno de proveedores
-    // -------------------------------------------------------------------------
-
-    /**
-     * Enruta el correo al proveedor disponible según la siguiente prioridad:
-     * <ol>
-     *   <li>Gmail API (OAuth2) si {@code gmail.api.enabled=true}</li>
-     *   <li>Resend API si {@code RESEND_API_KEY} está configurado</li>
-     *   <li>Gmail SMTP como fallback</li>
-     * </ol>
-     */
     private void sendEmail(String to, String subject, String htmlContent) {
         if (gmailApiEnabled) {
-            log.info("[EmailService] Proveedor seleccionado: Gmail API (OAuth2)");
+            log.info("[EmailService] Proveedor seleccionado: Gmail API");
             boolean sent = gmailService.sendEmail(to, subject, htmlContent);
-            if (sent) return;
-            log.warn("[EmailService] Gmail API falló. Intentando proveedor alternativo...");
+            if (sent) {
+                return;
+            }
+            log.warn("[EmailService] Gmail API fallo. Intentando proveedor alternativo HTTP/API...");
         }
 
         if (resendApiKey != null && !resendApiKey.isBlank()) {
             log.info("[EmailService] Proveedor seleccionado: Resend API");
             sendEmailViaResend(to, subject, htmlContent);
-        } else {
-            log.info("[EmailService] Proveedor seleccionado: Gmail SMTP");
-            sendEmailViaJavaMail(to, subject, htmlContent);
+            return;
         }
-    }
 
-    // -------------------------------------------------------------------------
-    // Implementaciones de proveedores
-    // -------------------------------------------------------------------------
-
-    private void sendEmailViaJavaMail(String to, String subject, String htmlContent) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setTo(to);
-            prepareTransactionalMessage(message, helper);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-
-            log.info("[EmailService] Enviando correo a {} vía SMTP (Gmail)...", to);
-            mailSender.send(message);
-            log.info("Correo enviado exitosamente a: {}", to);
-        } catch (Exception e) {
-            log.error("Fallo al enviar el correo a {} vía SMTP: {}", to, e.getMessage());
-        }
-    }
-
-    private void prepareTransactionalMessage(MimeMessage message, MimeMessageHelper helper) throws Exception {
-        helper.setFrom(new InternetAddress(AppConstants.MAIL_FROM, "VolticFit", "UTF-8"));
-        helper.setReplyTo(AppConstants.MAIL_FROM);
-        message.addHeader("X-Mailer", "VolticFit Mailer");
-        message.addHeader("Precedence", "transactional");
-        message.addHeader("Auto-Submitted", "auto-generated");
-        message.addHeader("List-Unsubscribe", "<mailto:" + AppConstants.MAIL_FROM + ">");
+        log.error("[EmailService] No se envio el correo a {} porque no hay proveedor configurado. Activa Gmail API o configura Resend.", to);
     }
 
     private void sendEmailViaResend(String to, String subject, String htmlContent) {
@@ -152,24 +101,26 @@ public class EmailService {
                     .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
                     .build();
 
-            log.info("[EmailService] Enviando correo a {} vía Resend API (puerto 443)...", to);
+            log.info("[EmailService] Enviando correo a {} via Resend API...", to);
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 200 || response.statusCode() == 201) {
-                log.info("[EmailService] Correo enviado exitosamente a {} vía Resend API. Código: {}", to, response.statusCode());
+                log.info("[EmailService] Correo enviado exitosamente a {} via Resend API. Codigo: {}", to, response.statusCode());
             } else {
-                log.error("[EmailService] Falló al enviar correo vía Resend API. Código: {}. Respuesta: {}", response.statusCode(), response.body());
+                log.error("[EmailService] Fallo al enviar correo via Resend API. Codigo: {}. Respuesta: {}", response.statusCode(), response.body());
             }
         } catch (Exception e) {
-            log.error("[EmailService] Error al enviar correo vía Resend API a {}: {}", to, e.getMessage(), e);
+            log.error("[EmailService] Error al enviar correo via Resend API a {}: {}", to, e.getMessage(), e);
         }
     }
 
     private String escapeJson(String raw) {
-        if (raw == null) return "";
+        if (raw == null) {
+            return "";
+        }
         return raw.replace("\\", "\\\\")
-                  .replace("\"", "\\\"")
-                  .replace("\n", "\\n")
-                  .replace("\r", "");
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "");
     }
 }

@@ -37,18 +37,6 @@ spring:
         format_sql: true
         physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${MAIL_USERNAME:volticfit@gmail.com}
-    password: ${MAIL_PASSWORD:pnnz onsb dvcb grse}
-    properties:
-      mail.smtp.auth: true
-      mail.smtp.starttls.enable: true
-      mail.smtp.connectiontimeout: 10000
-      mail.smtp.timeout: 10000
-      mail.smtp.writetimeout: 10000
-
 app:
   frontend:
     url: ${APP_FRONTEND_URL}
@@ -59,10 +47,10 @@ app:
 gmail:
   api:
     enabled: ${GMAIL_API_ENABLED:false}
-  credentials:
-    json: ${GMAIL_CREDENTIALS_JSON:}
-  token:
-    path: ${GMAIL_TOKEN_PATH:/tmp/gmail-tokens}
+    client-id: ${GMAIL_CLIENT_ID:}
+    client-secret: ${GMAIL_CLIENT_SECRET:}
+    refresh-token: ${GMAIL_REFRESH_TOKEN:}
+    sender: ${GMAIL_SENDER:${MAIL_USERNAME:volticfit@gmail.com}}
 
 security:
   jwt:

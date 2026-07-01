@@ -29,7 +29,7 @@ public class AppConstants {
     @Value("${app.frontend.url:http://localhost:4200}")
     private String frontendUrl;
  
-    @Value("${spring.mail.username:volticfit@gmail.com}")
+    @Value("${GMAIL_SENDER:${MAIL_USERNAME:volticfit@gmail.com}}")
     private String mailFrom;
  
     @Value("${security.jwt.token-expiration:3600000}")

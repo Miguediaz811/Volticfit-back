@@ -6,26 +6,24 @@ import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.Message;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.auth.oauth2.ServiceAccountCredentials;
-import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
+import com.google.auth.oauth2.UserCredentials;
 import jakarta.mail.Session;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
-import java.io.ByteArrayInputStream;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
 import java.io.ByteArrayOutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Properties;
 
 /**
- * Servicio de envío de correos usando Gmail API con autenticación OAuth2 (Service Account).
- * Evita las restricciones de SMTP en entornos cloud como Railway.
+ * Servicio de envio de correos usando Gmail API con OAuth2 de usuario.
+ * Este flujo funciona con cuentas Gmail normales usando client id, client secret y refresh token.
  */
 @Service
 @Log4j2
@@ -34,23 +32,24 @@ public class GmailService {
     private static final String GMAIL_SEND_SCOPE = "https://www.googleapis.com/auth/gmail.send";
     private static final String APPLICATION_NAME = "VolticFit";
 
-    @Value("${GMAIL_CREDENTIALS_JSON:}")
-    private String credentialsJson;
+    @Value("${GMAIL_CLIENT_ID:}")
+    private String clientId;
 
-    @Value("${spring.mail.username:volticfit@gmail.com}")
-    private String senderEmail;
+    @Value("${GMAIL_CLIENT_SECRET:}")
+    private String clientSecret;
 
-    /**
-     * Envía un correo HTML usando Gmail API con credenciales de Service Account.
-     *
-     * @param to          dirección de destino
-     * @param subject     asunto del correo
-     * @param htmlContent cuerpo HTML del correo
-     * @return true si el envío fue exitoso, false en caso contrario
-     */
+    @Value("${GMAIL_REFRESH_TOKEN:}")
+    private String refreshToken;
+
+    @Value("${GMAIL_SENDER:}")
+    private String gmailSenderEmail;
+
+    @Value("${MAIL_USERNAME:}")
+    private String mailUsername;
+
     public boolean sendEmail(String to, String subject, String htmlContent) {
-        if (credentialsJson == null || credentialsJson.isBlank()) {
-            log.warn("[GmailService] GMAIL_CREDENTIALS_JSON no está configurado. Omitiendo envío vía Gmail API.");
+        if (!hasOAuthConfig()) {
+            log.warn("[GmailService] Configuracion OAuth incompleta. Revisa GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN y GMAIL_SENDER.");
             return false;
         }
 
@@ -60,36 +59,23 @@ public class GmailService {
             Message message = buildMimeMessage(to, subject, htmlContent);
 
             gmail.users().messages().send("me", message).execute();
-            log.info("[GmailService] Correo enviado exitosamente a {} vía Gmail API.", to);
+            log.info("[GmailService] Correo enviado exitosamente a {} via Gmail API.", to);
             return true;
-
         } catch (Exception e) {
-            log.error("[GmailService] Error al enviar correo a {} vía Gmail API: {}", to, e.getMessage(), e);
+            log.error("[GmailService] Error al enviar correo a {} via Gmail API: {}", to, e.getMessage(), e);
             return false;
         }
     }
 
-    /**
-     * Construye las credenciales OAuth2 a partir del JSON de Service Account
-     * almacenado en la variable de entorno GMAIL_CREDENTIALS_JSON.
-     */
-    private GoogleCredentials buildCredentials() throws Exception {
-        byte[] credBytes = credentialsJson.getBytes(StandardCharsets.UTF_8);
-        GoogleCredentials credentials = ServiceAccountCredentials
-                .fromStream(new ByteArrayInputStream(credBytes))
+    private GoogleCredentials buildCredentials() {
+        return UserCredentials.newBuilder()
+                .setClientId(clientId.trim())
+                .setClientSecret(clientSecret.trim())
+                .setRefreshToken(refreshToken.trim())
+                .build()
                 .createScoped(Collections.singletonList(GMAIL_SEND_SCOPE));
-
-        // Si el service account tiene delegación de dominio, impersonar al remitente
-        if (credentials instanceof ServiceAccountCredentials serviceAccountCreds) {
-            credentials = serviceAccountCreds.createDelegated(senderEmail);
-        }
-
-        return credentials;
     }
 
-    /**
-     * Construye el cliente de Gmail API autenticado.
-     */
     private Gmail buildGmailClient(GoogleCredentials credentials) throws Exception {
         return new Gmail.Builder(
                 GoogleNetHttpTransport.newTrustedTransport(),
@@ -99,11 +85,8 @@ public class GmailService {
                 .build();
     }
 
-    /**
-     * Construye el mensaje MIME con soporte HTML y headers transaccionales,
-     * codificado en Base64 URL-safe para la Gmail API.
-     */
     private Message buildMimeMessage(String to, String subject, String htmlContent) throws Exception {
+        String senderEmail = resolveSenderEmail();
         Properties props = new Properties();
         Session session = Session.getDefaultInstance(props, null);
 
@@ -132,5 +115,26 @@ public class GmailService {
         Message message = new Message();
         message.setRaw(encodedEmail);
         return message;
+    }
+
+    private boolean hasOAuthConfig() {
+        return isPresent(clientId)
+                && isPresent(clientSecret)
+                && isPresent(refreshToken)
+                && isPresent(resolveSenderEmail());
+    }
+
+    private String resolveSenderEmail() {
+        if (isPresent(gmailSenderEmail)) {
+            return gmailSenderEmail.trim();
+        }
+        if (isPresent(mailUsername)) {
+            return mailUsername.trim();
+        }
+        return "volticfit@gmail.com";
+    }
+
+    private boolean isPresent(String value) {
+        return value != null && !value.isBlank();
     }
 }
