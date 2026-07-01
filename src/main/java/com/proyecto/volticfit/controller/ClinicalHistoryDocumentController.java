@@ -46,7 +46,7 @@ public class ClinicalHistoryDocumentController {
     @Operation(summary = "Subir un documento PDF o Word a un registro de historia clínica")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Object> upload(
-            @PathVariable Long historyId,
+            @PathVariable("historyId") Long historyId,
             @RequestParam("file") MultipartFile file,
             HttpServletRequest request) {
         try {
@@ -65,7 +65,7 @@ public class ClinicalHistoryDocumentController {
 
     @Operation(summary = "Listar los documentos de un registro de historia clínica")
     @GetMapping
-    public ResponseEntity<Object> list(@PathVariable Long historyId) {
+    public ResponseEntity<Object> list(@PathVariable("historyId") Long historyId) {
         try {
             List<ClinicalHistoryDocumentDTO> docs = documentService.list(historyId);
             if (docs.isEmpty()) {
@@ -88,8 +88,8 @@ public class ClinicalHistoryDocumentController {
     @Operation(summary = "Descargar un documento adjunto a la historia clínica")
     @GetMapping("/{documentId}/download")
     public ResponseEntity<Resource> download(
-            @PathVariable Long historyId,
-            @PathVariable Long documentId) {
+            @PathVariable("historyId") Long historyId,
+            @PathVariable("documentId") Long documentId) {
         try {
             Resource resource = documentService.download(historyId, documentId);
             String mimeType  = documentService.getMimeType(documentId);
@@ -112,8 +112,8 @@ public class ClinicalHistoryDocumentController {
     @Operation(summary = "Eliminar un documento de la historia clínica")
     @DeleteMapping("/{documentId}")
     public ResponseEntity<MessageResponseDTO> delete(
-            @PathVariable Long historyId,
-            @PathVariable Long documentId) {
+            @PathVariable("historyId") Long historyId,
+            @PathVariable("documentId") Long documentId) {
         try {
             return ResponseEntity.ok(documentService.delete(historyId, documentId));
         } catch (RuntimeException e) {
