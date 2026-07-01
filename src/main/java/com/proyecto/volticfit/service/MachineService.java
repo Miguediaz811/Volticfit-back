@@ -1,5 +1,6 @@
 package com.proyecto.volticfit.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -109,7 +110,7 @@ public class MachineService {
             machine.setState(
                     request.getState());
 
-
+            machine.setRegistrationDate(LocalDate.now());
 
             machineRepository.save(machine);
 
